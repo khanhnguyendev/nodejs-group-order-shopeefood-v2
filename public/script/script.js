@@ -34,7 +34,6 @@ function setCookie(name, value, days) {
     expires = "; expires=" + date.toUTCString();
   }
   document.cookie = name + "=" + (value || "") + expires + "; path=/";
-  document.getElementById("carousel_329e").classList.remove("disable-event");
 }
 
 function getCookie(name) {
@@ -57,10 +56,8 @@ function eraseCookie(name) {
  */
 if (cookieUserName == null || cookieUserName.length < 1) {
   document.getElementById("popup-username").style.display = "block";
-  document.getElementById("carousel_329e").classList.add("disable-event");
 } else {
   document.getElementById("popup-username").style.display = "none";
-  document.getElementById("carousel_329e").classList.remove("disable-event");
   socket.emit("old-user", roomName, cookieUserName);
 }
 
@@ -148,14 +145,15 @@ function sendOrder(event) {
     const orderDetail = {
       roomName: roomName,
       orderUser: userName,
+      shopName: document.getElementById("order-list-title").innerText,
       foodTitle: document.getElementById("txtFoodName").innerText,
       foodPrice: document.getElementById("txtFoodPrice").innerText,
       orderTime: getCurrentTime(),
       foodAmount: document.getElementById("txtFoodQty").value,
-      note: document.getElementById("txtNote").value,
+      foodNote: document.getElementById("txtNote").value,
     };
     closePopupConfirmOrder();
-    socket.emit("send-order", orderDetail);
+    socket.emit("order", orderDetail);
   } catch (error) {
     notify(TOASTR_ERROR, "Error", error.message);
   }
@@ -180,6 +178,7 @@ socket.on("room-created", (room) => {
 
 // Listen for order event
 socket.on("receive-order", (orderResult) => {
+  console.log("Receiving order")
   switch (orderResult.status) {
     case SUCCESS:
       appendMessage(orderResult.orderDetail, orderResult.sumOrders);

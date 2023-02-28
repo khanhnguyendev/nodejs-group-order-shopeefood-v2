@@ -28,7 +28,7 @@ const getOrder = async (req, res) => {
     
     return res.json({
       success: true,
-      message: orderHistory,
+      order: orderHistory,
     });
   } catch (error) {
     console.log("Error with fetching thoughts: ", error);

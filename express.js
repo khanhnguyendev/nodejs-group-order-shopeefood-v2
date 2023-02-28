@@ -49,7 +49,6 @@ module.exports.init = () => {
     if (rooms[req.body.orderShopName] != null) {
       return res.redirect("/");
     }
-  
 
     // Clear menu before create new room
     fs.writeFile(__dirname + "/dataJSON/menu.json", "[]", function () {

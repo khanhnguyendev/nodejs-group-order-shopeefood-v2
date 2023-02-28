@@ -1,15 +1,15 @@
-const Thought = require("../models/Thought");
+const OrderHistory = require("../models/OrderHistory");
 
-const addThought = async (req, res) => {
+const addOrder = async (req, res) => {
   try {
-    const thought = await Thought.create({
+    const order = await OrderHistory.create({
       name: req.body.name,
       description: req.body.description,
     });
 
     return res.json({
       success: true,
-      message: "Thought successfully added.",
+      message: "OrderHistory successfully added.",
     });
   } catch (error) {
     console.log("Error with adding thought: ", error);
@@ -20,13 +20,15 @@ const addThought = async (req, res) => {
   }
 };
 
-const getThoughts = async (req, res) => {
+const getOrder = async (req, res) => {
   try {
-    const thoughts = await Thought.find().select(["-__v"]);
+    const orderHistory = await OrderHistory.find().select(["-__v"]);
 
+    console.log(orderHistory);
+    
     return res.json({
       success: true,
-      message: thoughts,
+      message: orderHistory,
     });
   } catch (error) {
     console.log("Error with fetching thoughts: ", error);
@@ -39,6 +41,6 @@ const getThoughts = async (req, res) => {
 };
 
 module.exports = {
-  addThought,
-  getThoughts,
+  addOrder,
+  getOrder,
 };

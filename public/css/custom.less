@@ -42,23 +42,14 @@ body {
 .nav-item {
     button.nav-link.active {
         background: transparent;
+        border: 0;
     }
-    .nav-link {
+    button.nav-link {
         color: #fff;
-        margin-bottom: 0;
-        border: 1px solid transparent;
-        border-bottom: 0;
-        border-radius: 20px 20px 0 0;
-        &.active {
-            border: 1px solid #fff;
-            border-bottom: 0;
-            color: #fff;
-        }
+        border: 0;
+        padding: 1vw 2vw;
         &:hover {
-            border-color: transparent;
-            border: 1px solid #fff;
-            border-bottom: 0;
-            color: #fff;
+            border: 0;
         }
     }
 }
@@ -97,6 +88,7 @@ div.card-body-content {
     overflow-y: auto;
     margin: 30px 20px 0;
     text-align: center;
+    .scroll-bar(5px,10px)
 }
 .menu {
     &-wrapper {
@@ -106,10 +98,7 @@ div.card-body-content {
         overflow-y: auto;
         text-align: center;
         height: calc(100% - 60px);
-        &::-webkit-scrollbar {
-            width: 5px;
-            height: 10px;
-        }
+        .scroll-bar(5px,10px)
     }
     &-container {
         height: 100%;
@@ -147,6 +136,8 @@ ol .order-detail {
     display: flex;
     flex-direction: column;
     margin-left: 10px;
+    width: 100%;
+    
 }
 #order-info-1 {
     display: flex;
@@ -157,6 +148,7 @@ ol .order-detail {
 #order-info-2 {
     max-width: 330px;
     overflow-x: auto;
+    .scroll-bar(5px,5px)
 }
 #order-info-2 {
     max-width: 330px;
@@ -287,25 +279,12 @@ ol .order-detail {
     word-break: break-word;
     background-color: transparent;
     border: 1px solid #fff;
+    border-top: 0;
     border-radius: 30px;
+    margin-top: 2rem;
 }
 .tab-pane {
     height: 100%;
-    // &::-webkit-scrollbar {
-    //     width: 5px;
-    //     height: 10px;
-    // }
-    // &::-webkit-scrollbar-track {
-    //     background: #000; 
-    // }
-    // &::-webkit-scrollbar-thumb {
-    //     background: linear-gradient(#000, #008488); 
-    //     height: 10px;
-    //     border-radius: 30px;
-    // }
-    // &::-webkit-scrollbar-thumb:hover {
-    //     background: #555; 
-    // }
 }
 .subtotal {
     &-container {
@@ -329,7 +308,8 @@ ol .order-detail {
 
 
 // Modal 
-.modal-container.open {
+.modal-container.open,
+#toast-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -341,6 +321,47 @@ ol .order-detail {
     padding: 1rem;
     z-index: 40;
     background-color: rgb(0 0 0 / 95%);
+}
+#toast-container {
+    .toast {
+        border-radius: 10px;
+        background-color: #212121;
+        color: #fff;
+        padding: 1rem;
+        z-index: 40;
+        width: 400px;
+        height: 200px;
+        position: relative;
+    }
+    .toast-close-button {
+        position: absolute;
+        right: 10px;
+        width: 20px;
+        height: 20px;
+        line-height: 0;
+        border: none;
+        background-color: transparent;
+        color: #fff;
+        font-size: 2rem;
+        padding: 0px;
+    }
+    .toast-title,
+    .toast-message {
+        position: absolute;
+        
+        left: 50%;
+        font-size: 1.5rem;
+    }
+    .toast-title {
+        top: 30%;
+        transform: translateX(-50%);
+    }
+    .toast-message {
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        text-align: center;
+    }
 }
 .popup-confirm {
     border-radius: 10px;
@@ -423,4 +444,32 @@ ol .order-detail {
     transition: 0.25s;
     cursor: pointer;
     border-color: transparent;
+}
+
+// Menu tab
+.menu-tab {
+    width: 100%;
+    height: 50px;
+}
+.nav-tabs{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    list-style: none;
+    padding: 0 0;
+    li {
+        display: block;
+        height: 100%;
+        font-size: 20px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #000;
+        text-shadow: 0 0 15px #000;
+        transition: all 300ms cubic-bezier(0.075, 0.82, 0.165, 1);
+        text-align: center;
+        padding: 0 10px;
+    }
 }

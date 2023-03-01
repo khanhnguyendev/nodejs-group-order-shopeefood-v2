@@ -22,10 +22,12 @@ const addOrder = async (req, res) => {
 
 const getOrder = async (req, res) => {
   try {
-    const orderHistory = await OrderHistory.find().select(["-__v"]);
+    const shopName = req.query.shopName;
+    const orderHistory = await OrderHistory.find()
+      .select(["-__v"]);
 
     console.log(orderHistory);
-    
+
     return res.json({
       success: true,
       order: orderHistory,

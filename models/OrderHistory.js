@@ -3,11 +3,11 @@ const mongoose = require("mongoose");
 const OrderHistorySchema = new mongoose.Schema({
   roomName: String,
   shopName: String,
-  userName: String,
-  title: String,
-  price: Number,
-  qty: Number,
-  note: String,
+  orderUser: String,
+  foodTitle: String,
+  foodPrice: Number,
+  foodQty: Number,
+  foodNote: String,
   orderTime: Date,
 });
 

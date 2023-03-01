@@ -3,7 +3,8 @@ const express = require("express"),
   bodyParser = require("body-parser"),
   orderRoutes = require("./routes/orderRoutes"),
   cors = require("cors"),
-  fs = require("fs");
+  fs = require("fs"),
+  axios = require('axios');
 const OrderHistory = require("./models/OrderHistory");
 morgan = require("morgan"),
   path = require("path");
@@ -12,6 +13,7 @@ cron = require("node-cron");
 
 // Use env port or default
 const port = process.env.PORT || 5000;
+const baseUrl = process.env.BASE_URL || "http://localhost:5000";
 
 // TODO: add to config file
 const CONNECTION = "CONNECTION";
@@ -51,7 +53,7 @@ connection.once("open", () => {
   thoughtChangeStream.on("change", (change) => {
     switch (change.operationType) {
       case "insert":
-        const thought = {
+        const order = {
           _id: change.fullDocument._id,
           roomName: change.fullDocument.roomName,
           userName: change.fullDocument.userName,
@@ -60,8 +62,12 @@ connection.once("open", () => {
           qty: change.fullDocument.qty,
           date: change.fullDocument.date,
         };
+        let orderResult = {}
+        orderResult.status = SUCCESS;
+        orderResult.order = order
+        
 
-        io.emit("receive-order", thought);
+        io.emit("receive-order", orderResult);
         break;
 
       case "update":
@@ -132,7 +138,8 @@ app.post("/room", (req, res) => {
   res.redirect(roomName);
 });
 
-app.get("/:room", (req, res) => {
+// Render room page
+app.get("/:room", async (req, res) => {
   const room = rooms[req.params.room];
   if (!room) {
     return res.redirect("/");
@@ -145,16 +152,31 @@ app.get("/:room", (req, res) => {
 
   const ordersHistory = fs.readFileSync(__dirname + "/dataJSON/orders.json");
 
+  const orderJson = await fetchingOrder()
+
   res.render("room", {
     roomName: req.params.room,
     resName: restaurantName,
     foods: JSON.parse(menuInfo),
-    orders: JSON.parse(ordersHistory),
+    orders: orderJson,
     sumOrders: summaryOrders(JSON.parse(ordersHistory)),
     totalItems: JSON.parse(ordersHistory).length,
     totalPrice: calTotalPrice(JSON.parse(ordersHistory)),
   });
 });
+
+async function fetchingOrder() {
+  try {
+    const orderResult = await axios.get(`${baseUrl}/API/getOrder`);
+    if(orderResult?.data) {
+      console.log(orderResult.data);
+      return orderResult.data.order
+    }
+    return orderResult;
+  } catch (error) {
+    console.error(error);
+  }
+}
 
 io.on("connection", (socket) => {
   socket.on("new-user", (room, name) => {
@@ -189,11 +211,11 @@ io.on("connection", (socket) => {
     const order = new OrderHistory({
       roomName: orderReq.roomName,
       shopName: orderReq.shopName,
-      userName: orderReq.orderUser,
-      title: orderReq.foodTitle,
-      price: priceParser(orderReq.foodPrice),
-      qty: orderReq.foodAmount,
-      note: orderReq.foodNote,
+      orderUser: orderReq.orderUser,
+      foodTitle: orderReq.foodTitle,
+      foodPrice: priceParser(orderReq.foodPrice),
+      foodQty: orderReq.foodAmount,
+      foodNote: orderReq.foodNote,
       orderTime: new Date()
     })
     order.save()
@@ -395,9 +417,7 @@ function getMenuJson(json, req, res) {
 /**
  * Saving menu list to file
  */
-function saveMenuJson(menuJson, req, res) {
-  let ordersData = [];
-
+async function saveMenuJson(menuJson, req, res) {
   fs.writeFile(
     __dirname + "/dataJSON/menu.json",
     JSON.stringify(menuJson),
@@ -411,12 +431,14 @@ function saveMenuJson(menuJson, req, res) {
     }
   );
 
+  const orderJson = await fetchingOrder()
+
   res.render("room", {
     roomName: req.params.room,
     resName: restaurantName,
     foods: menuJson,
-    orders: ordersData,
-    sumOrders: ordersData,
+    orders: orderJson,
+    sumOrders: orderJson,
     totalItems: 0,
     totalPrice: 0,
   });

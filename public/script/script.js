@@ -131,32 +131,28 @@ function getCurrentTime() {
  *
  */
 function sendOrder(event) {
-  try {
-    const userName = getCookie("userName");
-    if (!userName || userName.length < 1) {
-      // User name undefined
-      return notify(
-        TOASTR_ERROR,
-        "Username undefined",
-        "Please remove cookies then try again!"
-      );
-    }
-
-    const orderDetail = {
-      roomName: roomName,
-      orderUser: userName,
-      shopName: document.getElementById("order-list-title").innerText,
-      foodTitle: document.getElementById("txtFoodName").innerText,
-      foodPrice: document.getElementById("txtFoodPrice").innerText,
-      orderTime: getCurrentTime(),
-      foodAmount: document.getElementById("txtFoodQty").value,
-      foodNote: document.getElementById("txtNote").value,
-    };
-    closePopupConfirmOrder();
-    socket.emit("order", orderDetail);
-  } catch (error) {
-    notify(TOASTR_ERROR, "Error", error.message);
+  const userName = getCookie("userName");
+  if (!userName || userName.length < 1) {
+    // User name undefined
+    return notify(
+      TOASTR_ERROR,
+      "Username undefined",
+      "Please remove cookies then try again!"
+    );
   }
+
+  const orderDetail = {
+    roomName: roomName,
+    orderUser: userName,
+    shopName: document.getElementById("order-list-title").innerText,
+    foodTitle: document.getElementById("txtFoodName").innerText,
+    foodPrice: document.getElementById("txtFoodPrice").innerText,
+    orderTime: getCurrentTime(),
+    foodAmount: document.getElementById("txtFoodQty").value,
+    foodNote: document.getElementById("txtNote").value,
+  };
+  closePopupConfirmOrder();
+  socket.emit("order", orderDetail);
 }
 
 socket.on("room-created", (room) => {
@@ -181,7 +177,7 @@ socket.on("receive-order", (orderResult) => {
   console.log("Receiving order")
   switch (orderResult.status) {
     case SUCCESS:
-      appendMessage(orderResult.orderDetail, orderResult.sumOrders);
+      appendMessage(orderResult.order);
       notify(
         TOASTR_SUCCESS,
         `Order Success`,
@@ -202,9 +198,9 @@ socket.on("clear-order", (orderId) => {
   deletedOrder.parentNode.removeChild(deletedOrder);
 });
 
-function appendMessage(orderDetail, summaryOrders) {
+function appendMessage(orderDetail) {
   appendOrder(orderDetail);
-  appendSummary(summaryOrders);
+  // appendSummary(summaryOrders);
 }
 
 function appendOrder(orderDetail) {
@@ -213,9 +209,7 @@ function appendOrder(orderDetail) {
 
   if (orderEl) {
     // DUPLICATE ORDER
-    orderEl.querySelector(
-      "#food-amount-txt"
-    ).innerHTML = `${orderDetail.foodAmount} x `;
+    orderEl.querySelector("#food-amount-txt").innerHTML = `${orderDetail.foodAmount} x `;
     orderEl.querySelector("#note-txt").innerHTML = `Note: ${orderDetail.note}`;
   } else {
     // NEW ORDER
@@ -274,7 +268,7 @@ function appendSummary(summaryOrders) {
   totalPriceEl.innerHTML = `${totalPrice},000đ`;
 
 
-  
+
 }
 
 /**

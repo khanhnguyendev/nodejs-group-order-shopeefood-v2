@@ -298,7 +298,6 @@ const menuItems = menu.querySelectorAll(".menu__item");
 let activeItem = menu.querySelector(".active");
 
 function clickItem(item, index) {
-<<<<<<< HEAD
     menu.style.removeProperty("--timeOut");
     if (activeItem == item) return;
     if (activeItem) {
@@ -308,24 +307,6 @@ function clickItem(item, index) {
     body.style.backgroundColor = bgColorsBody[index];
     activeItem = item;
     // offsetMenuBorder(activeItem, menuBorder);
-=======
-
-  menu.style.removeProperty("--timeOut");
-
-  if (activeItem == item) return;
-
-  if (activeItem) {
-    activeItem.classList.remove("active");
-  }
-
-
-  item.classList.add("active");
-  body.style.backgroundColor = bgColorsBody[index];
-  activeItem = item;
-  offsetMenuBorder(activeItem, menuBorder);
-
-
->>>>>>> 157a277c6385be9fcdae365b39d34305d266ba7c
 }
 
 // function offsetMenuBorder(element, menuBorder) {
@@ -334,7 +315,6 @@ function clickItem(item, index) {
 //     menuBorder.style.transform = `translate3d(${left}, 0 , 0)`;
 // }
 
-<<<<<<< HEAD
 // offsetMenuBorder(activeItem, menuBorder);
 
 menuItems.forEach((item, index) => {
@@ -347,23 +327,4 @@ window.addEventListener("resize", () => {
 });
 window.addEventListener("load", () => {
   body.style.backgroundColor = bgColorsBody[0];
-=======
-  const offsetActiveItem = element.getBoundingClientRect();
-  const left = Math.floor(offsetActiveItem.left - menu.offsetLeft - (menuBorder.offsetWidth - offsetActiveItem.width) / 2) + "px";
-  menuBorder.style.transform = `translate3d(${left}, 0 , 0)`;
-
-}
-
-offsetMenuBorder(activeItem, menuBorder);
-
-menuItems.forEach((item, index) => {
-
-  item.addEventListener("click", () => clickItem(item, index));
-
-})
-
-window.addEventListener("resize", () => {
-  offsetMenuBorder(activeItem, menuBorder);
-  menu.style.setProperty("--timeOut", "none");
->>>>>>> 157a277c6385be9fcdae365b39d34305d266ba7c
 });

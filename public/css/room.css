@@ -347,7 +347,7 @@ body::before {
 }
 
 #order-info-2 {
-  max-width: 330px;
+  max-width: 100%;
   overflow-x: auto;
 }
 

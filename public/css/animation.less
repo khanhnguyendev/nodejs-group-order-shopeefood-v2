@@ -56,3 +56,96 @@
 	}
 }
 
+html {
+  box-sizing: border-box;
+  --bgColorMenu : #1d1d27;
+  --duration: .7s;    
+}
+
+.menu{
+  margin: 50px auto 0;
+  display: flex;
+  width: 32.05em;
+  font-size: 1.5em;
+  padding: 0 2.85em;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bgColorMenu);
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  &__item{
+    all: unset;
+    flex-grow: 1;
+    z-index: 100;
+    display: flex;
+    cursor: pointer;
+    position: relative;
+    border-radius: 50%;
+    align-items: center;
+    will-change: transform;
+    justify-content: center;
+    padding: 5px 0;
+    transition: transform var(--timeOut , var(--duration));
+    &::before{
+      content: "";
+      z-index: -1;
+      width: 3.2em;
+      height: 3.2em;
+      border-radius: 50%;
+      position: absolute;
+      transform: scale(0);
+      transition: background-color var(--duration), transform var(--duration);
+    }
+    &.active {
+      transform: translate3d(0, -8px , 0);
+      &::before{
+        transform: scale(1);
+        background-color: var(--bgColorItem);
+      }
+      .icon {
+        animation: strok 1.5s reverse;
+      }
+    }
+  }
+  &__border{
+    left: 0;
+    bottom: 99%;
+    width: 10.9em;
+    height: 2.4em;
+    position: absolute;
+    clip-path: url(#menu);
+    will-change: transform;
+    background-color: var(--bgColorMenu);
+    transition: transform var(--timeOut , var(--duration));
+  } 
+}
+.icon{
+  width: 2.6em;
+  height: 2.6em;
+  stroke: white;
+  fill: transparent;
+  stroke-width: 1pt;
+  stroke-miterlimit: 10;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 400;
+}
+
+@keyframes strok {
+  100% {
+      stroke-dashoffset: 400;
+  }
+
+}
+
+.svg-container {
+  width: 0;
+  height: 0;
+}
+
+@media screen and (max-width: 50em) {
+  .menu{
+      font-size: .8em;
+  }
+}

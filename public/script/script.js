@@ -18,6 +18,194 @@ var orderDetail = "";
 var orderJson;
 var cookieUserName = getCookie("userName");
 
+
+socket.on("room-created", (room) => {
+  const roomElement = document.createElement("div");
+  roomElement.innerText = room;
+  const roomLink = document.createElement("a");
+  roomLink.href = `/${room}`;
+  roomContainer.append(roomElement);
+  roomContainer.append(roomLink);
+});
+
+
+// Delete Order
+function confirmDelete(event) {
+  let deletedOrder = {
+    orderId: event.getAttribute("id"),
+    roomName: event.getAttribute("data-room"),
+    foodTitle: event.getAttribute("data-food"),
+    orderUser: event.getAttribute("data-user"),
+    foodPrice: event.getAttribute("data-price"),
+    createdTime: event.getAttribute("data-time"),
+    deleteUser: getCookie("userName"),
+  };
+  socket.emit("delete", deletedOrder);
+}
+
+// Send food oder detail
+function sendOrder(event) {
+  const userName = getCookie("userName");
+  if (!userName || userName.length < 1) {
+    // User name undefined
+    return notify(
+      TOASTR_ERROR,
+      "Username undefined",
+      "Please remove cookies then try again!"
+    );
+  }
+
+  const orderDetail = {
+    roomName: roomName,
+    orderUser: userName,
+    shopName: document.getElementById("txtShopName").innerText,
+    foodTitle: document.getElementById("txtFoodName").innerText,
+    foodPrice: document.getElementById("txtFoodPrice").innerText,
+    orderTime: getCurrentTime(),
+    foodQty: document.getElementById("txtFoodQty").value,
+    foodNote: document.getElementById("txtNote").value,
+  };
+  closePopupConfirmOrder();
+  socket.emit("order", orderDetail);
+}
+
+// Listen for new order
+socket.on("new-order", (orderResult) => {
+  switch (orderResult.status) {
+    case SUCCESS:
+      appendNewOrder(orderResult.newOrder);
+      notify(
+        TOASTR_SUCCESS,
+        `Order Success`,
+        `${orderResult.newOrder.orderUser} : ${orderResult.newOrder.foodTitle}`
+      );
+      break;
+
+    default:
+      notify(TOASTR_ERROR, "Order Failed", "Something went wrong");
+      break;
+  }
+});
+
+// Listen for updated order
+socket.on("update-order", (updatedResult) => {
+  switch (updatedResult.status) {
+    case SUCCESS:
+      appendUpdatedOrder(updatedResult.updatedOrder);
+      notify(
+        TOASTR_SUCCESS,
+        `Updated Success`,
+        `${updatedResult.updatedOrder.orderUser} : ${updatedResult.updatedOrder.foodTitle}`
+      );
+      break;
+
+    default:
+      notify(TOASTR_ERROR, "Update Failed", "Something went wrong");
+      break;
+  }
+});
+
+// Listen for clear order event
+socket.on("delete-order", (orderId) => {
+  // Find order element and remove it
+  const deletedOrder = document.getElementById(orderId);
+  deletedOrder.parentNode.removeChild(deletedOrder);
+});
+
+function appendNewOrder(newOrder) {
+  const el = document.createElement("li");
+  el.id = newOrder._id;
+  el.setAttribute("onclick", "confirmDelete(this)");
+  el.setAttribute("data-room", newOrder.roomName);
+  el.setAttribute("data-user", newOrder.orderUser);
+  el.setAttribute("data-food", newOrder.foodTitle);
+  el.setAttribute("data-price", newOrder.foodPrice);
+  el.setAttribute("data-time", newOrder.createdTime);
+
+  el.innerHTML = `
+            <span class="order-detail">
+                <img class="user-avatar" alt="User Avatar" src="https://haycafe.vn/wp-content/uploads/2022/03/hinh-meo-hai-huoc.jpg">
+                <div class="order-text">
+                  <div id="order-info-1"><label id="user-txt">${newOrder.orderUser} </label><label id="order-time-txt">${newOrder.createdTime}</label></div>
+                  <div id="order-info-2"><label id="food-amount-txt">${newOrder.foodQty} x </label>${newOrder.foodTitle} x ${newOrder.foodPrice}</div>
+                  <div id="order-info-2"><label id="note-txt">Note: ${newOrder.foodNote}</label></div>
+                </div>
+            </span>
+        `;
+  orderContainer.appendChild(el);
+}
+
+function appendUpdatedOrder(updatedOrder) {
+  
+  const orderEl = document.getElementById(updatedOrder._id);
+  orderEl.querySelector("#food-amount-txt").innerHTML = `${updatedOrder.foodQty} x `;
+  orderEl.querySelector("#note-txt").innerHTML = `Note: ${updatedOrder.foodNote}`;
+}
+
+function appendSummary(summaryOrders) {
+  while (summaryContainer.firstChild) {
+    summaryContainer.removeChild(summaryContainer.firstChild);
+  }
+  let totalItems = 0;
+  let totalPrice = 0;
+
+  summaryOrders.forEach((sumDetail) => {
+    const el = document.createElement("div");
+    el.classList.add("summary-detail");
+    el.innerHTML = `
+        <div class="summary-info">
+            <span class="sum-qty-txt">${sumDetail.foodQty}</span>
+            <span class="sum-food-txt">${sumDetail.foodTitle}</span>
+        </div>
+        <div class="sum-total-txt">
+            <span>${sumDetail.foodPrice},000đ</span>
+        </div>
+      `;
+    summaryContainer.appendChild(el);
+    totalItems += sumDetail.foodQty;
+    totalPrice += sumDetail.foodPrice;
+  });
+
+  const subTotalEl = document.getElementById("sub-total-txt");
+  subTotalEl.innerHTML = `Subtotal (${totalItems} items)`
+
+  const totalPriceEl = document.getElementById("total-price-txt");
+  totalPriceEl.innerHTML = `${totalPrice},000đ`;
+
+}
+
+// Popup confirm order
+function showPopupConfirmOrder(e) {
+  document.getElementsByClassName("modal-container")[0].className += " open";
+  document.getElementById("popup-confirm").style.display = "block";
+
+  // Fill form
+  document.getElementById("txtFoodName").innerHTML =
+    e.getAttribute("data-title");
+  document.getElementById("txtFoodPrice").innerHTML =
+    e.getAttribute("data-price");
+  document.getElementById("txtFoodDes").innerHTML =
+    e.getAttribute("data-des").length == 0
+      ? `No description`
+      : e.getAttribute("data-des");
+}
+
+function closePopupConfirmOrder() {
+  document
+    .getElementsByClassName("modal-container")[0]
+    .classList.remove("open");
+  document.getElementById("popup-confirm").style.display = "none";
+}
+
+
+// Display popup define username
+if (cookieUserName == null || cookieUserName.length < 1) {
+  document.getElementById("popup-username").style.display = "block";
+} else {
+  document.getElementById("popup-username").style.display = "none";
+  socket.emit("old-user", roomName, cookieUserName);
+}
+
 function confirmUserName() {
   userName = txtuserName.value;
   document.getElementById("popup-username").style.display = "none";
@@ -51,44 +239,7 @@ function eraseCookie(name) {
   document.cookie = name + "=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
 }
 
-/**
- * Display popup define username
- */
-if (cookieUserName == null || cookieUserName.length < 1) {
-  document.getElementById("popup-username").style.display = "block";
-} else {
-  document.getElementById("popup-username").style.display = "none";
-  socket.emit("old-user", roomName, cookieUserName);
-}
-
-/**
- * Popup confirm order
- */
-function showPopupConfirmOrder(e) {
-  document.getElementsByClassName("modal-container")[0].className += " open";
-  document.getElementById("popup-confirm").style.display = "block";
-
-  // Fill form
-  document.getElementById("txtFoodName").innerHTML =
-    e.getAttribute("data-title");
-  document.getElementById("txtFoodPrice").innerHTML =
-    e.getAttribute("data-price");
-  document.getElementById("txtFoodDes").innerHTML =
-    e.getAttribute("data-des").length == 0
-      ? `No description`
-      : e.getAttribute("data-des");
-}
-
-function closePopupConfirmOrder() {
-  document
-    .getElementsByClassName("modal-container")[0]
-    .classList.remove("open");
-  document.getElementById("popup-confirm").style.display = "none";
-}
-
-/**
- * Notify message
- */
+// Notify message
 function notify(type, mainMessage, subMessage) {
   toastr.options = {
     width: 400,
@@ -111,10 +262,7 @@ function notify(type, mainMessage, subMessage) {
   }
 }
 
-/**
- * Get Current Time
- *
- */
+// Get Current Time
 function getCurrentTime() {
   var currentDate = new Date();
   return (
@@ -124,191 +272,4 @@ function getCurrentTime() {
     ":" +
     String(currentDate.getSeconds()).padStart(2, "0")
   );
-}
-
-/**
- * Send food oder detail
- *
- */
-function sendOrder(event) {
-  const userName = getCookie("userName");
-  if (!userName || userName.length < 1) {
-    // User name undefined
-    return notify(
-      TOASTR_ERROR,
-      "Username undefined",
-      "Please remove cookies then try again!"
-    );
-  }
-
-  const orderDetail = {
-    roomName: roomName,
-    orderUser: userName,
-    shopName: document.getElementById("order-list-title").innerText,
-    foodTitle: document.getElementById("txtFoodName").innerText,
-    foodPrice: document.getElementById("txtFoodPrice").innerText,
-    orderTime: getCurrentTime(),
-    foodAmount: document.getElementById("txtFoodQty").value,
-    foodNote: document.getElementById("txtNote").value,
-  };
-  closePopupConfirmOrder();
-  socket.emit("order", orderDetail);
-}
-
-socket.on("room-created", (room) => {
-  const roomElement = document.createElement("div");
-  roomElement.innerText = room;
-  const roomLink = document.createElement("a");
-  roomLink.href = `/${room}`;
-  roomContainer.append(roomElement);
-  roomContainer.append(roomLink);
-});
-
-// socket.on('user-connected', name => {
-//     appendLog(`${name} connected`)
-// })
-
-// socket.on('user-disconnected', name => {
-//     appendLog(`${name} disconnected`)
-// })
-
-// Listen for order event
-socket.on("receive-order", (orderResult) => {
-  console.log("Receiving order")
-  switch (orderResult.status) {
-    case SUCCESS:
-      appendMessage(orderResult.order);
-      notify(
-        TOASTR_SUCCESS,
-        `Order Success`,
-        `${orderResult.orderDetail.orderUser} : ${orderResult.orderDetail.foodTitle}`
-      );
-      break;
-
-    default:
-      notify(TOASTR_ERROR, "Order Failed", "Something went wrong");
-      break;
-  }
-});
-
-// Listen for clear order event
-socket.on("clear-order", (orderId) => {
-  // Find order element and remove it
-  const deletedOrder = document.getElementById(orderId);
-  deletedOrder.parentNode.removeChild(deletedOrder);
-});
-
-function appendMessage(orderDetail) {
-  appendOrder(orderDetail);
-  // appendSummary(summaryOrders);
-}
-
-function appendOrder(orderDetail) {
-  const orderId = orderDetail.orderId;
-  const orderEl = document.getElementById(orderId);
-
-  if (orderEl) {
-    // DUPLICATE ORDER
-    orderEl.querySelector("#food-amount-txt").innerHTML = `${orderDetail.foodAmount} x `;
-    orderEl.querySelector("#note-txt").innerHTML = `Note: ${orderDetail.note}`;
-  } else {
-    // NEW ORDER
-    const el = document.createElement("li");
-    el.id = orderId;
-    el.setAttribute("onclick", "confirmDelete(this)");
-    el.setAttribute("data-room", orderDetail.roomName);
-    el.setAttribute("data-user", orderDetail.orderUser);
-    el.setAttribute("data-food", orderDetail.foodTitle);
-    el.setAttribute("data-price", orderDetail.foodPrice);
-    el.setAttribute("data-time", orderDetail.orderTime);
-
-    el.innerHTML = `
-            <span class="order-detail">
-                <img class="user-avatar" alt="User Avatar" src="https://haycafe.vn/wp-content/uploads/2022/03/hinh-meo-hai-huoc.jpg">
-                <div class="order-text">
-                  <div id="order-info-1"><label id="user-txt">${orderDetail.orderUser} </label><label id="order-time-txt">${orderDetail.orderTime}</label></div>
-                  <div id="order-info-2"><label id="food-amount-txt">${orderDetail.foodAmount} x </label>${orderDetail.foodTitle} x ${orderDetail.foodPrice}</div>
-                  <div id="order-info-2"><label id="note-txt">Note: ${orderDetail.note}</label></div>
-                </div>
-            </span>
-        `;
-
-    orderContainer.appendChild(el);
-  }
-}
-
-function appendSummary(summaryOrders) {
-  while (summaryContainer.firstChild) {
-    summaryContainer.removeChild(summaryContainer.firstChild);
-  }
-  let totalItems = 0;
-  let totalPrice = 0;
-
-  summaryOrders.forEach((sumDetail) => {
-    const el = document.createElement("div");
-    el.classList.add("summary-detail");
-    el.innerHTML = `
-        <div class="summary-info">
-            <span class="sum-qty-txt">${sumDetail.foodAmount}</span>
-            <span class="sum-food-txt">${sumDetail.foodTitle}</span>
-        </div>
-        <div class="sum-total-txt">
-            <span>${sumDetail.foodPrice},000đ</span>
-        </div>
-      `;
-    summaryContainer.appendChild(el);
-    totalItems += sumDetail.foodAmount;
-    totalPrice += sumDetail.foodPrice;
-  });
-
-  const subTotalEl = document.getElementById("sub-total-txt");
-  subTotalEl.innerHTML = `Subtotal (${totalItems} items)`
-
-  const totalPriceEl = document.getElementById("total-price-txt");
-  totalPriceEl.innerHTML = `${totalPrice},000đ`;
-
-
-
-}
-
-/**
- * Delete Order
- */
-function confirmDelete(event) {
-  let selectedOrder = {
-    roomName: event.getAttribute("data-room"),
-    orderId: event.getAttribute("id"),
-    foodTitle: event.getAttribute("data-food"),
-    orderUser: event.getAttribute("data-user"),
-    foodPrice: event.getAttribute("data-price"),
-    orderTime: event.getAttribute("data-time"),
-    deleteUser: getCookie("userName"),
-  };
-  fetch("/delete?order=" + encodeURIComponent(JSON.stringify(selectedOrder)), {
-    method: "post",
-  })
-    .then((response) => {
-      if (response.status === 200) {
-        notify(
-          TOASTR_SUCCESS,
-          "Delete Order Success",
-          `${selectedOrder.foodTitle}`
-        );
-      } else if (response.status === 401) {
-        notify(
-          TOASTR_ERROR,
-          "Fail to delete your order",
-          "You do not have permission!!"
-        );
-      } else {
-        notify(
-          TOASTR_ERROR,
-          "Fail to delete your order",
-          "Something went wrong"
-        );
-      }
-    })
-    .catch((err) => {
-      notify(TOASTR_ERROR, "Fail to delete your order", err);
-    });
 }

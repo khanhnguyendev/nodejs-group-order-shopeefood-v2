@@ -50,32 +50,43 @@ connection.once("open", () => {
   console.log("Setting change streams");
   const thoughtChangeStream = connection.collection("orderhistories").watch();
 
-  thoughtChangeStream.on("change", (change) => {
+  thoughtChangeStream.on("change", async (change) => {
     switch (change.operationType) {
       case "insert":
-        const order = {
+        const newOrder = {
           _id: change.fullDocument._id,
+          shopName: change.fullDocument.shopName,
           roomName: change.fullDocument.roomName,
-          userName: change.fullDocument.userName,
-          title: change.fullDocument.title,
-          price: change.fullDocument.price,
-          qty: change.fullDocument.qty,
-          date: change.fullDocument.date,
+          orderUser: change.fullDocument.orderUser,
+          foodTitle: change.fullDocument.foodTitle,
+          foodPrice: change.fullDocument.foodPrice,
+          foodQty: change.fullDocument.foodQty,
+          foodNote: change.fullDocument.foodNote,
+          createdTime: change.fullDocument.createdTime,
+          updatedTime: change.fullDocument.updatedTime,
         };
+
         let orderResult = {}
         orderResult.status = SUCCESS;
-        orderResult.order = order
-        
+        orderResult.newOrder = newOrder
 
-        io.emit("receive-order", orderResult);
+
+        io.emit("new-order", orderResult);
         break;
 
       case "update":
-        console.log("orderhistories has updated");
+
+        const updatedOrder = await OrderHistory.find({_id : change.documentKey._id}).select(["-__v"]);
+
+        let updatedResult = {}
+        updatedResult.status = SUCCESS;
+        updatedResult.updatedOrder = updatedOrder[0]
+
+        io.emit("update-order", updatedResult);
         break;
 
       case "delete":
-        io.emit("deletedOrderHistory", change.documentKey._id);
+        io.emit("delete-order", change.documentKey._id);
         break;
     }
   });
@@ -168,7 +179,7 @@ app.get("/:room", async (req, res) => {
 async function fetchingOrder() {
   try {
     const orderResult = await axios.get(`${baseUrl}/API/getOrder`);
-    if(orderResult?.data) {
+    if (orderResult?.data) {
       console.log(orderResult.data);
       return orderResult.data.order
     }
@@ -207,20 +218,78 @@ io.on("connection", (socket) => {
   });
 
   // Order API
-  socket.on("order", (orderReq) => {
-    const order = new OrderHistory({
-      roomName: orderReq.roomName,
-      shopName: orderReq.shopName,
-      orderUser: orderReq.orderUser,
-      foodTitle: orderReq.foodTitle,
-      foodPrice: priceParser(orderReq.foodPrice),
-      foodQty: orderReq.foodAmount,
-      foodNote: orderReq.foodNote,
-      orderTime: new Date()
-    })
-    order.save()
+  socket.on("order", async (orderReq) => {
 
+    let roomName = orderReq.roomName
+    let shopName = orderReq.shopName
+    let orderUser = orderReq.orderUser
+    let foodTitle = orderReq.foodTitle
+    let foodPrice = priceParser(orderReq.foodPrice)
+    let foodQty = parseInt(orderReq.foodQty)
+    let foodNote = orderReq.foodNote
+
+    try {
+      // Check if there is an existing order with the same roomName, orderUser, foodTitle 
+      let historyOrder = await OrderHistory.findOne({ roomName, orderUser, foodTitle });
+
+      if (historyOrder) {
+        // If an existing order is found, update the foodQty, updatedTime
+        historyOrder.foodQty += foodQty;
+        historyOrder.updatedTime = new Date()
+        historyOrder.__v += 1
+        await historyOrder.save();
+
+        console.log(`Order updated: \n ${JSON.stringify(historyOrder)}`);
+
+      } else {
+        // If no existing order is found, create a new order
+        const newOrder = new OrderHistory({
+          roomName: roomName,
+          shopName: shopName,
+          orderUser: orderUser,
+          foodTitle: foodTitle,
+          foodPrice: foodPrice,
+          foodQty: foodQty,
+          foodNote: foodNote,
+          createdTime: new Date(),
+          updatedTime: new Date()
+        })
+
+        await newOrder.save();
+
+        console.log(`New order created: \n ${JSON.stringify(newOrder)}`);
+
+      }
+    } catch (error) {
+      console.log('Error with creating order:', error);
+    }
   })
+
+  // Delete API
+  socket.on("delete", async (deletedReq) => {
+    try {
+
+      let roomName = deletedReq.roomName
+      let orderUser = deletedReq.orderUser
+      let foodTitle = deletedReq.foodTitle
+
+      let historyOrder = await OrderHistory.findOne({ roomName, orderUser, foodTitle });
+      
+      if (!historyOrder) {
+        console.log(`User do not have permission: \n`, orderUser);
+        return
+      }
+      const deletedOrder = await OrderHistory.findOneAndDelete({ _id: deletedReq.orderId });  
+      if (!deletedOrder) {
+        console.log(`Error with deleting order: \n`, deletedOrder);
+      } else {
+        console.log(`Order successfully deleted: \n`, deletedOrder);
+      }
+    } catch (error) {
+      console.log(`Error with deleting order:`, error)
+    }
+  })
+
 });
 
 
@@ -449,19 +518,19 @@ function summaryOrders(ordersJson) {
 
   for (let i = 0; i < ordersJson.length; i++) {
     let foodTitle = ordersJson[i].foodTitle;
-    let foodAmount = parseInt(ordersJson[i].foodAmount);
+    let foodQty = parseInt(ordersJson[i].foodQty);
     let foodPrice = parseInt(ordersJson[i].foodPrice);
 
     let order = {};
 
     if (order[foodTitle]) {
       order.foodTitle = foodTitle;
-      order.foodAmount += foodAmount;
+      order.foodQty += foodQty;
     } else {
       order.foodTitle = foodTitle;
-      order.foodAmount = foodAmount;
+      order.foodQty = foodQty;
     }
-    order.foodPrice = foodPrice * foodAmount;
+    order.foodPrice = foodPrice * foodQty;
     sumOrders.push(order);
   }
 

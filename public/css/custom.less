@@ -6,7 +6,7 @@ body {
     color: @main-color;
     &:before {
         content: "";
-        background-image: @background-image;
+        // background-image: @background-image;
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -83,6 +83,7 @@ div.card-body-content {
         flex-wrap: wrap;
         overflow-y: auto;
         text-align: center;
+        margin-top: 10px;
         height: calc(100% - 60px);
         .scroll-bar(5px,10px)
     }
@@ -99,7 +100,7 @@ div.card-body-content {
     margin: 0 auto;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-around;
     position: relative;
 }
 ol .order-detail {
@@ -329,7 +330,7 @@ ol .order-detail {
     input, a {
         margin-top: 10px;
         text-align: center;
-        max-width: 252px;
+        max-width: 184px;
     }
     a {
         display: block;
@@ -410,7 +411,7 @@ ol .order-detail {
     margin: 5px;
     width: 150px;
     height: 50px;
-    background: #3EA6FF;
+    // background: #3EA6FF;
     text-align: center;
     padding: 14px 40px;
     outline: none;
@@ -449,7 +450,9 @@ ol .order-detail {
     }
 }
 .btn.add-to-cart,
-#confirmBtn {
+#confirmBtn,
+#orderCloseBtn,
+#orderConfirmBtn {
     --c:  @button-color;
     box-shadow: 0 0 0 .1em inset var(--c); 
     --_g: linear-gradient(var(--c) 0 0) no-repeat;
@@ -471,6 +474,16 @@ ol .order-detail {
         color: #fff;
     }
 }
+#orderCloseBtn {
+    --c:  @close-button-color;
+    box-shadow: none;
+    color: #fff;
+}
+#orderConfirmBtn {
+    --c:  @confirm-button-color;
+    box-shadow: none;
+    color: #fff;
+}
 .order-title {
     width: 100%;
     font-family: 'Roboto';
@@ -483,10 +496,17 @@ ol .order-detail {
 .svg-container {
     width: 0;
     height: 0;
-  }
-  
-  @media screen and (max-width: 50em) {
-    .menu{
-        font-size: .8em;
+}
+.title-wrapper {
+    height: 30px;
+    overflow: hidden;
+    white-space: nowrap;
+    #order-list-title {
+        font-size: 30px;
+        position: relative;
+        display: inline-block;
+        animation: textMove 15s infinite linear;
+        color: #EBB55F;
     }
-  }
+}
+ 

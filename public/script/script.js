@@ -13,6 +13,8 @@ const TOASTR_SUCCESS = "success";
 const TOASTR_WARNING = "warning";
 const ERROR = "400";
 const SUCCESS = "200";
+const PERMISSION_DENIED = "500";
+
 
 var orderDetail = "";
 var orderJson;
@@ -34,10 +36,7 @@ function confirmDelete(event) {
   let deletedOrder = {
     orderId: event.getAttribute("id"),
     roomName: event.getAttribute("data-room"),
-    foodTitle: event.getAttribute("data-food"),
-    orderUser: event.getAttribute("data-user"),
-    foodPrice: event.getAttribute("data-price"),
-    createdTime: event.getAttribute("data-time"),
+    shopName: event.getAttribute("data-shop"),
     deleteUser: getCookie("userName"),
   };
   socket.emit("delete", deletedOrder);
@@ -105,11 +104,31 @@ socket.on("update-order", (updatedResult) => {
   }
 });
 
-// Listen for clear order event
-socket.on("delete-order", (orderId) => {
-  // Find order element and remove it
-  const deletedOrder = document.getElementById(orderId);
-  deletedOrder.parentNode.removeChild(deletedOrder);
+// Listen for delete order
+socket.on("delete-order", (deleteResult) => {
+  switch (deleteResult.status) {
+    case SUCCESS:
+      // Find order element and remove it
+      const deletedOrder = document.getElementById(orderId);
+      deletedOrder.parentNode.removeChild(deletedOrder);
+      notify(
+        TOASTR_SUCCESS,
+        `Delete Success`,
+        `${deleteResult.order.orderUser} : ${deleteResult.order.foodTitle}`
+      );
+      break;
+
+    case PERMISSION_DENIED:
+      notify(
+        TOASTR_ERROR,
+        `Delete Failed`,
+        `Permission Denied`
+      );
+
+    default:
+      // notify(TOASTR_ERROR, "Delete Failed", "Something went wrong");
+      break;
+  }
 });
 
 function appendNewOrder(newOrder) {
@@ -117,10 +136,7 @@ function appendNewOrder(newOrder) {
   el.id = newOrder._id;
   el.setAttribute("onclick", "confirmDelete(this)");
   el.setAttribute("data-room", newOrder.roomName);
-  el.setAttribute("data-user", newOrder.orderUser);
-  el.setAttribute("data-food", newOrder.foodTitle);
-  el.setAttribute("data-price", newOrder.foodPrice);
-  el.setAttribute("data-time", newOrder.createdTime);
+  el.setAttribute("data-shop", newOrder.shopName);
 
   el.innerHTML = `
             <span class="order-detail">
@@ -136,7 +152,7 @@ function appendNewOrder(newOrder) {
 }
 
 function appendUpdatedOrder(updatedOrder) {
-  
+
   const orderEl = document.getElementById(updatedOrder._id);
   orderEl.querySelector("#food-amount-txt").innerHTML = `${updatedOrder.foodQty} x `;
   orderEl.querySelector("#note-txt").innerHTML = `Note: ${updatedOrder.foodNote}`;
@@ -283,28 +299,28 @@ let activeItem = menu.querySelector(".active");
 
 function clickItem(item, index) {
 
-    menu.style.removeProperty("--timeOut");
-    
-    if (activeItem == item) return;
-    
-    if (activeItem) {
-        activeItem.classList.remove("active");
-    }
+  menu.style.removeProperty("--timeOut");
 
-    
-    item.classList.add("active");
-    body.style.backgroundColor = bgColorsBody[index];
-    activeItem = item;
-    offsetMenuBorder(activeItem, menuBorder);
-    
-    
+  if (activeItem == item) return;
+
+  if (activeItem) {
+    activeItem.classList.remove("active");
+  }
+
+
+  item.classList.add("active");
+  body.style.backgroundColor = bgColorsBody[index];
+  activeItem = item;
+  offsetMenuBorder(activeItem, menuBorder);
+
+
 }
 
 function offsetMenuBorder(element, menuBorder) {
 
-    const offsetActiveItem = element.getBoundingClientRect();
-    const left = Math.floor(offsetActiveItem.left - menu.offsetLeft - (menuBorder.offsetWidth  - offsetActiveItem.width) / 2) +  "px";
-    menuBorder.style.transform = `translate3d(${left}, 0 , 0)`;
+  const offsetActiveItem = element.getBoundingClientRect();
+  const left = Math.floor(offsetActiveItem.left - menu.offsetLeft - (menuBorder.offsetWidth - offsetActiveItem.width) / 2) + "px";
+  menuBorder.style.transform = `translate3d(${left}, 0 , 0)`;
 
 }
 
@@ -312,11 +328,11 @@ offsetMenuBorder(activeItem, menuBorder);
 
 menuItems.forEach((item, index) => {
 
-    item.addEventListener("click", () => clickItem(item, index));
-    
+  item.addEventListener("click", () => clickItem(item, index));
+
 })
 
 window.addEventListener("resize", () => {
-    offsetMenuBorder(activeItem, menuBorder);
-    menu.style.setProperty("--timeOut", "none");
+  offsetMenuBorder(activeItem, menuBorder);
+  menu.style.setProperty("--timeOut", "none");
 });

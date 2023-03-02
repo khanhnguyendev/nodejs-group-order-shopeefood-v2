@@ -92,7 +92,7 @@
                 <div class="tab-content" id="myTabContent">
                     <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
                       <div class="menu-container">
-                        <h2 id="order-list-title"><%= resName %></h2>
+                        <h2 id="txtShopName"><%= resName %></h2>
                         <div class="menu-wrapper">
                           <% foods.forEach((food)=> { %>
                           <div class="card">
@@ -117,9 +117,7 @@
                             <ol class="orders-list" id="display-order">
                               <% orders.forEach((orderDetail)=> { %>
                                 <li onclick="confirmDelete(this)" id="<%= orderDetail._id %>"
-                                  data-room="<%= orderDetail.roomName %>" data-user="<%= orderDetail.orderUser %>"
-                                  data-food="<%= orderDetail.foodTitle %>" data-price="<%= orderDetail.foodPrice %>"
-                                  data-time="<%= orderDetail.orderTime %>" data-amount="<% orderDetail.foodQty %>">
+                                  data-room="<%= orderDetail.roomName %>" data-shop="<%= orderDetail.shopName %>">
   
                                   <span class="order-detail">
                                     <img class="user-avatar" alt="User Avatar"

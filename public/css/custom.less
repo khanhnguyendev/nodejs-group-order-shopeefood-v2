@@ -146,14 +146,14 @@ ol .order-detail {
     overflow-x: auto;
 }
 #order-info-2 {
-    max-width: 330px;
+    max-width: 100%;
     overflow-x: auto;
     .scroll-bar(5px,5px)
 }
-#order-info-2 {
-    max-width: 330px;
-    overflow-x: auto;
-}
+// #order-info-2 {
+//     max-width: 330px;
+//     overflow-x: auto;
+// }
 #user-txt {
     font-size: 18px;
     font-weight: 900;
@@ -167,8 +167,9 @@ ol .order-detail {
     margin-left: 5px;
 }
 #order-title-txt {
-    max-width: 200px;
+    max-width: 100%;
     word-wrap: break-word;
+    margin-left: 5px;
 }
 .order-detail {
     content: " ";
@@ -308,8 +309,7 @@ ol .order-detail {
 
 
 // Modal 
-.modal-container.open,
-#toast-container {
+.modal-container.open{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -321,47 +321,6 @@ ol .order-detail {
     padding: 1rem;
     z-index: 40;
     background-color: rgb(0 0 0 / 95%);
-}
-#toast-container {
-    .toast {
-        border-radius: 10px;
-        background-color: #212121;
-        color: #fff;
-        padding: 1rem;
-        z-index: 40;
-        width: 400px;
-        height: 200px;
-        position: relative;
-    }
-    .toast-close-button {
-        position: absolute;
-        right: 10px;
-        width: 20px;
-        height: 20px;
-        line-height: 0;
-        border: none;
-        background-color: transparent;
-        color: #fff;
-        font-size: 2rem;
-        padding: 0px;
-    }
-    .toast-title,
-    .toast-message {
-        position: absolute;
-        
-        left: 50%;
-        font-size: 1.5rem;
-    }
-    .toast-title {
-        top: 30%;
-        transform: translateX(-50%);
-    }
-    .toast-message {
-        top: 50%;
-        transform: translate(-50%, -50%);
-        width: 100%;
-        text-align: center;
-    }
 }
 .popup-confirm {
     border-radius: 10px;

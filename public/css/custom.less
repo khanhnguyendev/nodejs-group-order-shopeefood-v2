@@ -39,20 +39,6 @@ body {
     margin: 0;
     border: 0;
 }
-.nav-item {
-    button.nav-link.active {
-        background: transparent;
-        border: 0;
-    }
-    button.nav-link {
-        color: #fff;
-        border: 0;
-        padding: 1vw 2vw;
-        &:hover {
-            border: 0;
-        }
-    }
-}
 #order-list-title {
     width: 100%;
     font-family: 'Roboto';
@@ -309,7 +295,8 @@ ol .order-detail {
 
 
 // Modal 
-.modal-container.open{
+.modal-container.open,
+#popup-username.open{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -321,6 +308,34 @@ ol .order-detail {
     padding: 1rem;
     z-index: 40;
     background-color: rgb(0 0 0 / 95%);
+}
+#popup-username {
+    display: none;
+}
+.popup-username--wrapper {
+    border-radius: 10px;
+    background-color: #212121;
+    padding: 1rem;
+    z-index: 40;
+    width: 450px;
+    color: #fff;
+    text-align: center;
+    h2 {
+        display: table;
+        margin: 0 auto;
+        font-family: 'Roboto';
+        font-size: 40px;
+    }
+    input, a {
+        margin-top: 10px;
+        text-align: center;
+        max-width: 252px;
+    }
+    a {
+        display: block;
+        margin: 10px auto 0;
+        cursor: pointer;
+    }
 }
 .popup-confirm {
     border-radius: 10px;
@@ -433,7 +448,8 @@ ol .order-detail {
         margin-left: 10px;
     }
 }
-.btn.add-to-cart {
+.btn.add-to-cart,
+#confirmBtn {
     --c:  @button-color;
     box-shadow: 0 0 0 .1em inset var(--c); 
     --_g: linear-gradient(var(--c) 0 0) no-repeat;
@@ -455,3 +471,22 @@ ol .order-detail {
         color: #fff;
     }
 }
+.order-title {
+    width: 100%;
+    font-family: 'Roboto';
+    font-size: 20px;
+    color: aqua;
+    padding-left: 10px;
+    text-align: center;
+}
+
+.svg-container {
+    width: 0;
+    height: 0;
+  }
+  
+  @media screen and (max-width: 50em) {
+    .menu{
+        font-size: .8em;
+    }
+  }

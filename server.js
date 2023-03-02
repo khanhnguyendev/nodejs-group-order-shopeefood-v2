@@ -278,29 +278,29 @@ io.on("connection", (socket) => {
 
   // Delete API
   socket.on("delete", async (deletedReq) => {
-    try {
-      let clientIp = socket.request.connection.remoteAddress.replace("::ffff:", "");
+    let clientIp = socket.request.connection.remoteAddress.replace("::ffff:", "");
 
-      console.log(`Delete order from ${clientIp} to ${deletedReq.roomName}@${deletedReq.shopName}`);
+    console.log(`Delete order from ${deletedUser}@${clientIp} to ${deletedReq.roomName}@${deletedReq.shopName}`);
 
-      let roomName = deletedReq.roomName
-      let deletedUser = deletedReq.deleteUser
+    let roomName = deletedReq.roomName
+    let deletedUser = deletedReq.deleteUser
 
-      let historyOrder = await OrderHistory.findOne({ _id: deletedReq.orderId });
+    let historyOrder = await OrderHistory.findOne({ _id: deletedReq.orderId });
 
-      if (!historyOrder || historyOrder.roomName != roomName || historyOrder.orderUser != deletedUser || historyOrder.ipUser != clientIp) {
-        console.log(`User ${deletedUser}@${clientIp} do not have permission: \n OrderId`, deletedReq.orderId);
-        let deleteResult = {}
-        deleteResult.status = PERMISSION_DENIED
-        deleteResult.order = historyOrder
-        return io.emit("delete-order", deleteResult);
-      }
-      const deletedOrder = await OrderHistory.findOneAndDelete({ _id: deletedReq.orderId });
-      if (!deletedOrder) {
-        console.log(`Error with deleting order: \n`, deletedOrder);
-      }
-    } catch (error) {
-      console.log(`Error with deleting order:`, error)
+    if (!historyOrder || historyOrder.roomName != roomName || historyOrder.orderUser != deletedUser || historyOrder.ipUser != clientIp) {
+      console.log(`User ${deletedUser}@${clientIp} permission denied: \nOrderId`, deletedReq.orderId);
+      let deleteResult = {}
+      deleteResult.status = PERMISSION_DENIED
+      deleteResult.order = historyOrder
+      return io.emit("delete-order", deleteResult);
+    }
+    const deletedOrder = await OrderHistory.findOneAndDelete({ _id: deletedReq.orderId });
+    if (!deletedOrder) {
+      console.log(`Error with deleting order: \n`, deletedOrder);      
+      // let deleteResult = {}
+      // deleteResult.status = PERMISSION_DENIED
+      // deleteResult.order = historyOrder
+      // return io.emit("delete-order", deleteResult);
     }
   })
 

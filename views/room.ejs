@@ -112,73 +112,74 @@
                     <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
                       <div class="summary-container">
                         <div class="summary-left">
-                          <ol class="orders-list" id="display-order">
-                            <% orders.forEach((orderDetail)=> { %>
-                              <li onclick="confirmDelete(this)" id="<%= orderDetail._id %>"
-                                data-room="<%= orderDetail.roomName %>" data-user="<%= orderDetail.orderUser %>"
-                                data-food="<%= orderDetail.foodTitle %>" data-price="<%= orderDetail.foodPrice %>"
-                                data-time="<%= orderDetail.orderTime %>" data-amount="<% orderDetail.foodQty %>">
-
-                                <span class="order-detail">
-                                  <img class="user-avatar" alt="User Avatar"
-                                    src="https://haycafe.vn/wp-content/uploads/2022/03/hinh-meo-hai-huoc.jpg">
-                                  <div class="order-text">
-                                    <div id="order-info-1"><label id="user-txt">
-                                        <%= orderDetail.orderUser %>
-                                      </label><label id="order-time-txt">
-                                        <%= orderDetail.createdTime %>
-                                      </label>
+                          <div class="summary-left--wrapper">
+                            <h2 class="order-title">Order List</h2>
+                            <ol class="orders-list" id="display-order">
+                              <% orders.forEach((orderDetail)=> { %>
+                                <li onclick="confirmDelete(this)" id="<%= orderDetail._id %>"
+                                  data-room="<%= orderDetail.roomName %>" data-user="<%= orderDetail.orderUser %>"
+                                  data-food="<%= orderDetail.foodTitle %>" data-price="<%= orderDetail.foodPrice %>"
+                                  data-time="<%= orderDetail.orderTime %>" data-amount="<% orderDetail.foodQty %>">
+  
+                                  <span class="order-detail">
+                                    <img class="user-avatar" alt="User Avatar"
+                                      src="https://haycafe.vn/wp-content/uploads/2022/03/hinh-meo-hai-huoc.jpg">
+                                    <div class="order-text">
+                                      <div id="order-info-1"><label id="user-txt">
+                                          <%= orderDetail.orderUser %>
+                                        </label><label id="order-time-txt">
+                                          <%= orderDetail.createdTime %>
+                                        </label>
+                                      </div>
+                                      <div id="order-info-2"><label id="food-amount-txt">
+                                          <%= orderDetail.foodQty %> x 
+                                        </label><label id="order-title-txt">
+                                          <%= orderDetail.foodTitle %> x <%=orderDetail.foodPrice %>
+                                        </label>
+                                      </div>
+                                      <div id="order-info-2">
+                                        <label id="note-txt">
+                                          Note: <%= orderDetail.foodNote %>
+                                        </label>
+                                      </div>
                                     </div>
-                                    <div id="order-info-2"><label id="food-amount-txt">
-                                        <%= orderDetail.foodQty %> x 
-                                      </label><label id="order-title-txt">
-                                        <%= orderDetail.foodTitle %> x <%=orderDetail.foodPrice %>
-                                      </label>
-                                    </div>
-                                    <div id="order-info-2">
-                                      <label id="note-txt">
-                                        Note: <%= orderDetail.foodNote %>
-                                      </label>
-                                    </div>
-                                  </div>
-                                </span>
-                              </li>
-                              <% }) %>
-                          </ol>
+                                  </span>
+                                </li>
+                                <% }) %>
+                            </ol>
+                          </div>
                         </div>
                         <div class="summary-right">
-                          <div class="summary-right--container">
-                            <div class="summary-right--wrapper">
-                              <h2 id="txtShopName">Summary Order</h2>
-                              <div class="summary-order-container" id="display-summary">
-                                <div class="summary-detail">
-                                  <div class="summary-info">
-                                    <span class="sum-qty-txt">1</span>
-                                    <span class="sum-food-txt">Bánh tráng cuốn bơ</span>
-                                  </div>
-                                  <div class="sum-total-txt">
-                                    <span>29,000đ</span>
-                                  </div>
+                          <div class="summary-right--wrapper">
+                            <h2 class="order-title" id="txtShopName">Summary Order</h2>
+                            <div class="summary-order-container" id="display-summary">
+                              <div class="summary-detail">
+                                <div class="summary-info">
+                                  <span class="sum-qty-txt">1</span>
+                                  <span class="sum-food-txt">Bánh tráng cuốn bơ</span>
                                 </div>
-                                
-                                <div class="summary-detail">
-                                  <div class="summary-info">
-                                    <span class="sum-qty-txt">1</span>
-                                    <span class="sum-food-txt">Trà Tắc Size 1L</span>
-                                  </div>
-                                  <div class="sum-total-txt">
-                                    <span>15,000đ</span>
-                                  </div>
+                                <div class="sum-total-txt">
+                                  <span>29,000đ</span>
                                 </div>
                               </div>
-                              <div class="subtotal-container">
-                                <div class="subtotal-info">
-                                  <span id="sub-total-txt" class="subtotal-txt">Subtotal (12 items)</span>
-                                  <span id="total-price-txt" class="subtotal-price-txt">301,000đ</span>
+                              
+                              <div class="summary-detail">
+                                <div class="summary-info">
+                                  <span class="sum-qty-txt">1</span>
+                                  <span class="sum-food-txt">Trà Tắc Size 1L</span>
+                                </div>
+                                <div class="sum-total-txt">
+                                  <span>15,000đ</span>
                                 </div>
                               </div>
-
                             </div>
+                            <div class="subtotal-container">
+                              <div class="subtotal-info">
+                                <span id="sub-total-txt" class="subtotal-txt">Subtotal (12 items)</span>
+                                <span id="total-price-txt" class="subtotal-price-txt">301,000đ</span>
+                              </div>
+                            </div>
+
                           </div>
                         </div>
                         
@@ -195,10 +196,12 @@
         </div>
         
         <!-- POPUP Define User Name -->
-        <div class="popup" id="popup-username" style="display: none;">
-          <h2>What should i call you?</h2>
-          <input id="userName" type="text" placeholder="Your Name" required>
-          <input id="confirmBtn" onclick="confirmUserName()" value="Yes, please!">
+        <div class="popup" id="popup-username">
+          <div class="popup-username--wrapper">
+            <h2>What should i call you?</h2>
+            <input id="userName" type="text" placeholder="Your Name" required>
+            <a id="confirmBtn" onclick="confirmUserName()">Yes, please!</a>
+          </div>
         </div>
     </div>
 

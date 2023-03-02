@@ -200,15 +200,15 @@ function closePopupConfirmOrder() {
 
 // Display popup define username
 if (cookieUserName == null || cookieUserName.length < 1) {
-  document.getElementById("popup-username").style.display = "block";
+  document.getElementById("popup-username").classList.add('open');
 } else {
-  document.getElementById("popup-username").style.display = "none";
+  document.getElementById("popup-username").classList.remove('open');
   socket.emit("old-user", roomName, cookieUserName);
 }
 
 function confirmUserName() {
   userName = txtuserName.value;
-  document.getElementById("popup-username").style.display = "none";
+  document.getElementById("popup-username").classList.remove('open');
   setCookie("userName", userName, 1);
   // appendLog('You joined')
   socket.emit("new-user", roomName, userName);

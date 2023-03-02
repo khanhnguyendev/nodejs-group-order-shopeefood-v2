@@ -8,7 +8,7 @@ const addOrder = async (req, res) => {
     });
 
     return res.json({
-      success: true,
+      success: 200,
       message: "OrderHistory successfully added.",
     });
   } catch (error) {
@@ -23,13 +23,12 @@ const addOrder = async (req, res) => {
 const getOrder = async (req, res) => {
   try {
     const shopName = req.query.shopName;
-    const orderHistory = await OrderHistory.find()
-      .select(["-__v"]);
+    const orderHistory = await OrderHistory.find().select(["-__v"]);
 
     console.log(orderHistory);
 
     return res.json({
-      success: true,
+      success: 200,
       order: orderHistory,
     });
   } catch (error) {

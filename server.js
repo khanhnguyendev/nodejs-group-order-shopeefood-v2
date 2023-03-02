@@ -22,6 +22,7 @@ const DEBUG = "DEBUG";
 const SUCCESS = "200";
 const ERROR = "400";
 const AUTHORITY = "401";
+const PERMISSION_DENIED = "500";
 
 //establish socket.io connection
 const app = express();
@@ -76,7 +77,7 @@ connection.once("open", () => {
 
       case "update":
 
-        const updatedOrder = await OrderHistory.find({_id : change.documentKey._id}).select(["-__v"]);
+        const updatedOrder = await OrderHistory.find({ _id: change.documentKey._id }).select(["-__v"]);
 
         let updatedResult = {}
         updatedResult.status = SUCCESS;
@@ -86,7 +87,11 @@ connection.once("open", () => {
         break;
 
       case "delete":
-        io.emit("delete-order", change.documentKey._id);
+
+        let deleteResult = {}
+        deleteResult.status = SUCCESS;
+        deleteResult.deleteId = change.documentKey._id
+        io.emit("delete-order", deleteResult);
         break;
     }
   });
@@ -219,6 +224,9 @@ io.on("connection", (socket) => {
 
   // Order API
   socket.on("order", async (orderReq) => {
+    let clientIp = socket.request.connection.remoteAddress.replace("::ffff:", "");
+
+    console.log(`Order from ${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`);
 
     let roomName = orderReq.roomName
     let shopName = orderReq.shopName
@@ -227,10 +235,12 @@ io.on("connection", (socket) => {
     let foodPrice = priceParser(orderReq.foodPrice)
     let foodQty = parseInt(orderReq.foodQty)
     let foodNote = orderReq.foodNote
+    let ipUser = clientIp;
+
 
     try {
       // Check if there is an existing order with the same roomName, orderUser, foodTitle 
-      let historyOrder = await OrderHistory.findOne({ roomName, orderUser, foodTitle });
+      let historyOrder = await OrderHistory.findOne({ roomName, orderUser, foodTitle, ipUser });
 
       if (historyOrder) {
         // If an existing order is found, update the foodQty, updatedTime
@@ -251,6 +261,7 @@ io.on("connection", (socket) => {
           foodPrice: foodPrice,
           foodQty: foodQty,
           foodNote: foodNote,
+          ipUser: ipUser,
           createdTime: new Date(),
           updatedTime: new Date()
         })
@@ -267,26 +278,29 @@ io.on("connection", (socket) => {
 
   // Delete API
   socket.on("delete", async (deletedReq) => {
-    try {
+    let clientIp = socket.request.connection.remoteAddress.replace("::ffff:", "");
 
-      let roomName = deletedReq.roomName
-      let orderUser = deletedReq.orderUser
-      let foodTitle = deletedReq.foodTitle
+    console.log(`Delete order from ${deletedUser}@${clientIp} to ${deletedReq.roomName}@${deletedReq.shopName}`);
 
-      let historyOrder = await OrderHistory.findOne({ roomName, orderUser, foodTitle });
-      
-      if (!historyOrder) {
-        console.log(`User do not have permission: \n`, orderUser);
-        return
-      }
-      const deletedOrder = await OrderHistory.findOneAndDelete({ _id: deletedReq.orderId });  
-      if (!deletedOrder) {
-        console.log(`Error with deleting order: \n`, deletedOrder);
-      } else {
-        console.log(`Order successfully deleted: \n`, deletedOrder);
-      }
-    } catch (error) {
-      console.log(`Error with deleting order:`, error)
+    let roomName = deletedReq.roomName
+    let deletedUser = deletedReq.deleteUser
+
+    let historyOrder = await OrderHistory.findOne({ _id: deletedReq.orderId });
+
+    if (!historyOrder || historyOrder.roomName != roomName || historyOrder.orderUser != deletedUser || historyOrder.ipUser != clientIp) {
+      console.log(`User ${deletedUser}@${clientIp} permission denied: \nOrderId`, deletedReq.orderId);
+      let deleteResult = {}
+      deleteResult.status = PERMISSION_DENIED
+      deleteResult.order = historyOrder
+      return io.emit("delete-order", deleteResult);
+    }
+    const deletedOrder = await OrderHistory.findOneAndDelete({ _id: deletedReq.orderId });
+    if (!deletedOrder) {
+      console.log(`Error with deleting order: \n`, deletedOrder);      
+      // let deleteResult = {}
+      // deleteResult.status = PERMISSION_DENIED
+      // deleteResult.order = historyOrder
+      // return io.emit("delete-order", deleteResult);
     }
   })
 

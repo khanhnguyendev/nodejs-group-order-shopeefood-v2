@@ -110,9 +110,7 @@
                             <ol class="orders-list" id="display-order">
                               <% orders.forEach((orderDetail)=> { %>
                                 <li onclick="confirmDelete(this)" id="<%= orderDetail._id %>"
-                                  data-room="<%= orderDetail.roomName %>" data-user="<%= orderDetail.orderUser %>"
-                                  data-food="<%= orderDetail.foodTitle %>" data-price="<%= orderDetail.foodPrice %>"
-                                  data-time="<%= orderDetail.orderTime %>" data-amount="<% orderDetail.foodQty %>">
+                                  data-room="<%= orderDetail.roomName %>" data-shop="<%= orderDetail.shopName %>">
   
                                   <span class="order-detail">
                                     <img class="user-avatar" alt="User Avatar"

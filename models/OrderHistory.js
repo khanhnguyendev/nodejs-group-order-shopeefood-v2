@@ -8,6 +8,7 @@ const OrderHistorySchema = new mongoose.Schema({
   foodPrice: Number,
   foodQty: Number,
   foodNote: String,
+  ipUser: String,
   createdTime: Date,
   updatedTime: Date,
 });

@@ -18,7 +18,8 @@
     "socket.io": "^2.3.0"
   },
   "scripts": {
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "deploy": "node server.js"
   },
   "author": "khanhnguyen@dev",
   "license": "ISC"

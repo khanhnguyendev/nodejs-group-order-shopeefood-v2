@@ -296,7 +296,7 @@ body::before {
   cursor: pointer;
 }
 
-#order-list-title {
+#txtShopName {
   font-family: 'Roboto';
   margin-top: -10px;
   font-size: 20px;

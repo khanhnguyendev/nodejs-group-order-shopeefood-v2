@@ -71,6 +71,7 @@ connection.once("open", () => {
         orderResult.status = SUCCESS;
         orderResult.newOrder = newOrder
 
+        console.log(`Mongoose successfully created ${change.documentKey._id}`);
 
         io.emit("new-order", orderResult);
         break;
@@ -83,15 +84,22 @@ connection.once("open", () => {
         updatedResult.status = SUCCESS;
         updatedResult.updatedOrder = updatedOrder[0]
 
+        console.log(`Mongoose successfully updated ${change.documentKey._id}`);
+
         io.emit("update-order", updatedResult);
         break;
 
       case "delete":
+        // let deleteResult = {}
+        // let order = {}
+        // order._id = change.documentKey._id
 
-        let deleteResult = {}
-        deleteResult.status = SUCCESS;
-        deleteResult.deleteId = change.documentKey._id
-        io.emit("delete-order", deleteResult);
+        // deleteResult.status = SUCCESS;
+        // deleteResult.order = order
+
+        // io.emit("delete-order", deleteResult);
+
+        console.log(`Mongoose successfully deleted ${change.documentKey._id}`);
         break;
     }
   });
@@ -168,22 +176,22 @@ app.get("/:room", async (req, res) => {
 
   const ordersHistory = fs.readFileSync(__dirname + "/dataJSON/orders.json");
 
-  const orderJson = await fetchingOrder()
+  const hisOrderJSON = await getHistoryOrder(req.params.room, restaurantName)
 
   res.render("room", {
     roomName: req.params.room,
     resName: restaurantName,
     foods: JSON.parse(menuInfo),
-    orders: orderJson,
+    orders: hisOrderJSON,
     sumOrders: summaryOrders(JSON.parse(ordersHistory)),
     totalItems: JSON.parse(ordersHistory).length,
     totalPrice: calTotalPrice(JSON.parse(ordersHistory)),
   });
 });
 
-async function fetchingOrder() {
+async function getHistoryOrder(roomName, shopName) {
   try {
-    const orderResult = await axios.get(`${baseUrl}/API/getOrder`);
+    const orderResult = await axios.get(`${baseUrl}/API/getOrder?roomName=${roomName}&shopName=${shopName}`);
     if (orderResult?.data) {
       console.log(orderResult.data);
       return orderResult.data.order
@@ -280,14 +288,19 @@ io.on("connection", (socket) => {
   socket.on("delete", async (deletedReq) => {
     let clientIp = socket.request.connection.remoteAddress.replace("::ffff:", "");
 
-    console.log(`Delete order from ${deletedUser}@${clientIp} to ${deletedReq.roomName}@${deletedReq.shopName}`);
-
     let roomName = deletedReq.roomName
+    let shopName = deletedReq.shopName
     let deletedUser = deletedReq.deleteUser
+
+    console.log(`Delete order from ${deletedUser}@${clientIp} to ${roomName}@${shopName}`);
 
     let historyOrder = await OrderHistory.findOne({ _id: deletedReq.orderId });
 
-    if (!historyOrder || historyOrder.roomName != roomName || historyOrder.orderUser != deletedUser || historyOrder.ipUser != clientIp) {
+    if (!historyOrder
+      || historyOrder.roomName != roomName
+      || historyOrder.shopName != shopName
+      || historyOrder.orderUser != deletedUser
+      || historyOrder.ipUser != clientIp) {
       console.log(`User ${deletedUser}@${clientIp} permission denied: \nOrderId`, deletedReq.orderId);
       let deleteResult = {}
       deleteResult.status = PERMISSION_DENIED
@@ -296,12 +309,18 @@ io.on("connection", (socket) => {
     }
     const deletedOrder = await OrderHistory.findOneAndDelete({ _id: deletedReq.orderId });
     if (!deletedOrder) {
-      console.log(`Error with deleting order: \n`, deletedOrder);      
+      console.log(`Error with deleting order: \n`, deletedOrder);
+      return
       // let deleteResult = {}
       // deleteResult.status = PERMISSION_DENIED
       // deleteResult.order = historyOrder
       // return io.emit("delete-order", deleteResult);
-    }
+    }      
+    let deleteResult = {}
+    deleteResult.status = SUCCESS
+    deleteResult.order = historyOrder
+    return io.emit("delete-order", deleteResult);
+
   })
 
 });
@@ -514,7 +533,7 @@ async function saveMenuJson(menuJson, req, res) {
     }
   );
 
-  const orderJson = await fetchingOrder()
+  const orderJson = await getHistoryOrder(req.params.room, restaurantName)
 
   res.render("room", {
     roomName: req.params.room,

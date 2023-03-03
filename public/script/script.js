@@ -109,7 +109,7 @@ socket.on("delete-order", (deleteResult) => {
   switch (deleteResult.status) {
     case SUCCESS:
       // Find order element and remove it
-      const deletedOrder = document.getElementById(orderId);
+      const deletedOrder = document.getElementById(deleteResult.order._id);
       deletedOrder.parentNode.removeChild(deletedOrder);
       notify(
         TOASTR_SUCCESS,

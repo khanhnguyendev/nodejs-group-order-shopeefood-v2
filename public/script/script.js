@@ -327,4 +327,5 @@ window.addEventListener("resize", () => {
 });
 window.addEventListener("load", () => {
   body.style.backgroundColor = bgColorsBody[0];
+  body.style.backdropFilter = "brightness(90%)"
 });

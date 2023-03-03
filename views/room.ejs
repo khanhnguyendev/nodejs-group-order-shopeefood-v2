@@ -88,15 +88,15 @@
                         </div>
                         <div class="menu-wrapper">
                           <% foods.forEach((food)=> { %>
-                          <div class="card">
-                              <img class="card-img-top" src="<%= food.image %>">
-                              <div class="card-body-content">
-                                <h5 class="card-title"><%= food.title %></h5>
-                              </div>
-                              <a onclick="showPopupConfirmOrder(this)" class="btn mt-3 add-to-cart" 
-                                data-title="<%= food.title %>" data-price="<%= food.price %>" data-des="<%= food.des %>">
-                                <%= food.price %>
-                              </a>
+                          <div class="card btn-border-dark">
+                            <img class="card-img-top" src="<%= food.image %>">
+                            <div class="card-body-content">
+                              <h5 class="card-title"><%= food.title %></h5>
+                            </div>
+                            <a onclick="showPopupConfirmOrder(this)" class="btn mt-3 add-to-cart" 
+                              data-title="<%= food.title %>" data-price="<%= food.price %>" data-des="<%= food.des %>">
+                              <%= food.price %>
+                            </a>
                           </div>
                           <% }) %>
                         </div>
@@ -205,7 +205,7 @@
           <p id="txtFoodPrice" type="text" disabled placeholder="Price"></p>
           <p id="txtFoodDes" type="text" disabled placeholder="Description"></p>
         </div>
-        <input id="txtFoodQty" type="number" name="qty" min="1" max="100" value="1">
+        <input id="txtFoodQty" type="number" min="1" max="100" value="1">
         <input id="txtNote" type="text" placeholder="Note">
         <div class="popup-confirm-btn">
           <button id="orderCloseBtn" onclick="closePopupConfirmOrder()">Close</button>

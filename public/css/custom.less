@@ -1,9 +1,12 @@
 // Common
-html, body {
+html,
+body {
     height: 100%;
 }
+
 body {
     color: @main-color;
+
     &:before {
         content: "";
         // background-image: @background-image;
@@ -19,26 +22,35 @@ body {
         filter: brightness(50%);
     }
 }
+
 .tab-pane {
     // overflow: auto;
     padding-top: 20px;
+
     .card {
         margin-top: 10px;
         padding: 20px 10px 10px;
         width: 100%;
         margin: 10px;
-        > a {
+        background: #fff;
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 7px 30px -10px rgba(150, 170, 180, 0.5);
+
+        >a {
             width: 120px;
             margin: 0 auto;
         }
     }
 }
+
 .nav.nav-tabs {
     justify-content: space-between;
     font-size: 21px;
     margin: 0;
     border: 0;
 }
+
 #txtShopName {
     width: 100%;
     font-family: 'Roboto';
@@ -46,6 +58,7 @@ body {
     color: aqua;
     padding-left: 10px;
 }
+
 .container {
     background-color: transparent;
     display: flex;
@@ -53,20 +66,25 @@ body {
     align-items: center;
     max-width: 1200px;
 }
+
 .tab-container {
     width: 100%;
 }
+
 .comming-soon {
     color: @main-color;
     text-align: center;
 }
+
 // Home tab
 img.card-img-top {
     height: 195px;
     width: 196px;
-    border: 1px solid #fff;
+    border-radius: 20px;
+    border: 1px solid rgb(231, 231, 231);
     margin: 10px auto 0px auto;
 }
+
 div.card-body-content {
     letter-spacing: 1px;
     font-weight: 500;
@@ -74,8 +92,9 @@ div.card-body-content {
     overflow-y: auto;
     margin: 30px 20px 0;
     text-align: center;
-    .scroll-bar(5px,10px)
+    .scroll-bar(5px, 10px)
 }
+
 .menu {
     &-wrapper {
         display: flex;
@@ -85,8 +104,9 @@ div.card-body-content {
         text-align: center;
         margin-top: 10px;
         height: calc(100% - 60px);
-        .scroll-bar(5px,10px)
+        .scroll-bar(5px, 10px)
     }
+
     &-container {
         height: 100%;
     }
@@ -103,15 +123,17 @@ div.card-body-content {
     justify-content: space-around;
     position: relative;
 }
+
 ol .order-detail {
     display: flex;
     align-items: center;
     white-space: nowrap;
     border-radius: 10px;
-    box-shadow: rgb(0 0 0 / 60%) 0px 14px 28px, rgb(0 0 0 / 22%) 0px 10px 10px;
+    // box-shadow: rgb(0 0 0 / 60%) 0px 14px 28px, rgb(0 0 0 / 22%) 0px 10px 10px;
     margin: 10px;
     cursor: pointer;
 }
+
 .user-avatar {
     width: 50px;
     height: 50px;
@@ -119,28 +141,35 @@ ol .order-detail {
     margin-right: 10px;
     margin-left: 10px;
 }
+
 .order-text {
     display: flex;
     flex-direction: column;
     margin-left: 10px;
     width: 100%;
-    
 }
+
 #order-info-1 {
     display: flex;
     align-items: center;
     max-width: 330px;
     overflow-x: auto;
 }
+
 #order-info-2 {
-    max-width: 100%;
+    // max-width: 100%;
+    max-width: 400px;
     overflow-x: auto;
-    // .scroll-bar(5px,5px)
+    &:hover {
+        color: #ff0202;
+    }
 }
+
 // #order-info-2 {
 //     max-width: 330px;
 //     overflow-x: auto;
 // }
+
 #user-txt {
     font-size: 18px;
     font-weight: 900;
@@ -148,27 +177,30 @@ ol .order-detail {
     color: rgb(255, 0, 0);
     text-shadow: none;
 }
+
 #order-time-txt {
     font-size: 12px;
-    color: gray;
+    color: rgb(58, 58, 58);
     margin-left: 5px;
 }
+
 #order-title-txt {
     max-width: 100%;
     word-wrap: break-word;
     margin-left: 5px;
 }
+
 .order-detail {
     content: " ";
     position: relative;
     display: block;
     padding: 0.4em 0.4em 0.4em 2.5em;
     margin: 0.5em 0;
-    color: rgb(255, 255, 255);
     text-decoration: none;
     border-radius: 0.3em;
     transition: .3s ease-out;
     box-shadow: rgb(255 255 255 / 20%) 0px 0px 0px 1px inset, rgb(0 0 0 / 90%) 0px 0px 0px 1px;
+
     &:before {
         content: counter(li);
         counter-increment: li;
@@ -179,38 +211,44 @@ ol .order-detail {
         // background: #08d9d6d7;
         height: 2em;
         width: 2em;
-        border: 0.2em solid #fff;
+        border: 0.1em solid #000000;
         text-align: center;
         font-weight: bold;
         border-radius: 2em;
         transition: all .3s ease-out;
     }
+
     &:hover {
         background: #E9E4E0;
         text-decoration: line-through;
         color: #ff0202;
+
         &:before {
             content: "X";
-            color: rgb(255, 255, 255);
+            color: rgb(0, 0, 0);
             background: #ff0202;
             transform: rotate(360deg);
         }
     }
 }
+
 .orders-list {
     counter-reset: li;
     padding: 0;
 }
+
 .summary-left,
 .summary-right {
     width: 100%;
     height: 100%;
     background-color: transparent;
 }
+
 .summary {
     &-right {
         margin-top: 1rem;
     }
+
     &-detail {
         display: flex;
         border-radius: 10px;
@@ -219,11 +257,13 @@ ol .order-detail {
         align-items: center;
         padding: 10px;
         color: @main-color;
-        &:not(:first-child){
+
+        &:not(:first-child) {
             margin-top: 10px;
         }
 
     }
+
     &-info {
         display: flex;
         margin-left: 10px;
@@ -231,29 +271,36 @@ ol .order-detail {
         max-width: 80%;
         align-items: center;
     }
+
     &-right {
         &--container {
             height: 100%;
         }
+
         &--wrapper {
             padding: 10px;
             height: 100%;
+
             #txtShopName {
                 text-transform: uppercase;
             }
+
             .summary-order-container,
             .subtotal-container {
                 margin-top: 10px;
             }
         }
     }
+
     &-order-container {
         height: calc(100% - 100px);
     }
 }
+
 .sum-qty-txt {
     width: 45px;
 }
+
 .sum-food-txt {
     width: calc(100% - 90px);
 }
@@ -262,24 +309,29 @@ ol .order-detail {
     height: 100vh;
     overflow: hidden;
 }
+
 .tab-content {
     height: calc(100% - 120px);
     word-break: break-word;
-    background-color: #1e1b27;
-    border: 1px solid #fff;
+    background-color: #fbfbfbbf;
+    box-shadow: 0 5px 10px rgba(154, 160, 185, .05), 0 15px 40px rgba(166, 173, 201, .2);
+    // border: 1px solid #fff;
     border-top: 0;
     border-radius: 30px;
     margin-top: 0;
 }
+
 .tab-pane {
     height: 100%;
 }
+
 .subtotal {
     &-container {
         padding: 10px;
         height: 50px;
         box-shadow: rgb(255 1 1) 2px 2px 2px 2px;
     }
+
     &-info {
         color: @main-color;
         display: flex;
@@ -297,7 +349,7 @@ ol .order-detail {
 
 // Modal 
 .modal-container.open,
-#popup-username.open{
+#popup-username.open {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -310,9 +362,11 @@ ol .order-detail {
     z-index: 40;
     background-color: rgb(0 0 0 / 95%);
 }
+
 #popup-username {
     display: none;
 }
+
 .popup-username--wrapper {
     border-radius: 10px;
     background-color: #212121;
@@ -321,30 +375,36 @@ ol .order-detail {
     width: 450px;
     color: #fff;
     text-align: center;
+
     h2 {
         display: table;
         margin: 0 auto;
         font-family: 'Roboto';
         font-size: 40px;
     }
-    input, a {
+
+    input,
+    a {
         margin-top: 10px;
         text-align: center;
         max-width: 184px;
     }
+
     a {
         display: block;
         margin: 10px auto 0;
         cursor: pointer;
     }
 }
+
 .popup-confirm {
     border-radius: 10px;
-    background-color: #212121;
+    background-color: #fff;
     padding: 1rem;
     z-index: 40;
     width: 400px;
 }
+
 #popup-confirm-title {
     display: table;
     margin: 0 auto;
@@ -352,42 +412,47 @@ ol .order-detail {
     font-size: 40px;
     color: @main-color;
 }
+
 .popup-confirm-info {
     max-height: 500px;
     overflow-y: auto;
 }
+
 .popup-confirm p {
     width: 300px;
     border: 0;
-    background: rgb(85, 85, 85);
+    background: rgb(182, 182, 182);
     display: block;
     margin: 20px auto;
     text-align: center;
     border: 1px solid #3F3F3F;
     padding: 14px 10px;
     outline: none;
-    color: white;
+    color: @main-color;
     border-radius: 24px;
     transition: 0.25s;
     word-break: break-word
 }
+
 .popup-confirm input {
     border: 0;
-    background: #0F0F0F;
+    // background: #0F0F0F;
     display: block;
     margin: 20px auto;
     text-align: center;
     border: 1px solid #6e6e6e;
     padding: 14px 10px;
     outline: none;
-    color: white;
+    color: @main-color;
     border-radius: 24px;
     transition: 0.25s;
 }
+
 .popup-confirm-btn {
     display: flex;
     justify-content: center;
 }
+
 #orderCloseBtn {
     display: inline-flex;
     align-items: center;
@@ -396,6 +461,7 @@ ol .order-detail {
     width: 150px;
     height: 50px;
     background: none;
+    color: @main-color;
     text-align: center;
     padding: 14px 40px;
     outline: none;
@@ -404,14 +470,18 @@ ol .order-detail {
     cursor: pointer;
     border-color: transparent;
 }
+
 #orderConfirmBtn {
+    --c: @confirm-button-color;
+    box-shadow: none;
+    color:  @main-color;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     margin: 5px;
     width: 150px;
     height: 50px;
-    // background: #3EA6FF;
+    background: #3EA6FF;
     text-align: center;
     padding: 14px 40px;
     outline: none;
@@ -426,13 +496,15 @@ ol .order-detail {
     width: 100%;
     height: 50px;
 }
-.nav-tabs{
+
+.nav-tabs {
     height: 100%;
     width: 100%;
     display: flex;
     align-items: center;
     list-style: none;
     padding: 0 0;
+
     li {
         display: block;
         height: 100%;
@@ -449,46 +521,50 @@ ol .order-detail {
         margin-left: 10px;
     }
 }
+
 .btn.add-to-cart,
 #confirmBtn,
 #orderCloseBtn,
 #orderConfirmBtn {
-    --c:  @button-color;
-    box-shadow: 0 0 0 .1em inset var(--c); 
+    --c: @button-color;
+    box-shadow: 0 0 0 .1em inset var(--c);
     --_g: linear-gradient(var(--c) 0 0) no-repeat;
-    background: 
-        var(--_g) calc(var(--_p,0%) - 100%) 0%,
-        var(--_g) calc(200% - var(--_p,0%)) 0%,
-        var(--_g) calc(var(--_p,0%) - 100%) 100%,
-        var(--_g) calc(200% - var(--_p,0%)) 100%;
-    background-size: 50.5% calc(var(--_p,0%)/2 + .5%);
+    background:
+        var(--_g) calc(var(--_p, 0%) - 100%) 0%,
+        var(--_g) calc(200% - var(--_p, 0%)) 0%,
+        var(--_g) calc(var(--_p, 0%) - 100%) 100%,
+        var(--_g) calc(200% - var(--_p, 0%)) 100%;
+    background-size: 50.5% calc(var(--_p, 0%)/2 + .5%);
     outline-offset: .1em;
     transition: background-size .4s, background-position 0s .4s;
+
     &:hover {
         --_p: 100%;
         transition: background-position .4s, background-size 0s;
-    }
-    &:active {
-        box-shadow: 0 0 9e9q inset #0009; 
-        background-color: var(--c);
         color: #fff;
     }
+
+    &:active {
+        box-shadow: 0 0 9e9q inset #0009;
+        background-color: var(--c);
+        color: @main-color;
+    }
 }
+
 #orderCloseBtn {
-    --c:  @close-button-color;
+    --c: @close-button-color;
     box-shadow: none;
-    color: #fff;
+    color:  @main-color;
 }
+
 #orderConfirmBtn {
-    --c:  @confirm-button-color;
-    box-shadow: none;
-    color: #fff;
 }
+
 .order-title {
     width: 100%;
     font-family: 'Roboto';
     font-size: 20px;
-    color: aqua;
+    color: red;
     padding-left: 10px;
     text-align: center;
 }
@@ -497,16 +573,17 @@ ol .order-detail {
     width: 0;
     height: 0;
 }
+
 .title-wrapper {
     height: 30px;
     overflow: hidden;
     white-space: nowrap;
+
     #txtShopName {
         font-size: 30px;
         position: relative;
         display: inline-block;
         animation: textMove 15s infinite linear;
-        color: #EBB55F;
+        color: #ff0089;
     }
 }
- 

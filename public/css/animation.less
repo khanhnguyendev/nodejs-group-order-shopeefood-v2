@@ -59,7 +59,7 @@ html {
   position: relative;
   align-items: center;
   justify-content: center;
-  background-color: var(--bgColorMenu);
+  background-color: transparent;
   border-top-left-radius: 18px;
   border-top-right-radius: 18px;
   &__item{
@@ -111,7 +111,7 @@ html {
 .icon{
   width: 2.6em;
   height: 2.6em;
-  stroke: white;
+  stroke: #000;
   fill: transparent;
   stroke-width: 1pt;
   stroke-miterlimit: 10;
@@ -125,4 +125,12 @@ html {
       stroke-dashoffset: 400;
   }
 
+}
+@keyframes textMove {
+  from {
+    left: 1300px
+  }
+  to {
+    left: -500px
+  }
 }

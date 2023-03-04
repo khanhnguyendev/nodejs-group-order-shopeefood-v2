@@ -174,18 +174,17 @@ app.get("/:room", async (req, res) => {
     return fetchShopeeFood(req, res);
   }
 
-  const ordersHistory = fs.readFileSync(__dirname + "/dataJSON/orders.json");
-
   const hisOrderJSON = await getHistoryOrder(req.params.room, restaurantName)
 
+  // Render for refresh or new connection
   res.render("room", {
     roomName: req.params.room,
     resName: restaurantName,
     foods: JSON.parse(menuInfo),
     orders: hisOrderJSON,
-    sumOrders: summaryOrders(JSON.parse(ordersHistory)),
-    totalItems: JSON.parse(ordersHistory).length,
-    totalPrice: calTotalPrice(JSON.parse(ordersHistory)),
+    sumOrders: summaryOrders(hisOrderJSON),
+    totalItems: hisOrderJSON.reduce((acc, order) => acc + order.foodQty, 0),
+    totalPrice: calTotalPrice(hisOrderJSON),
   });
 });
 
@@ -437,9 +436,9 @@ async function getRestaurantName(deliveryInfo, req, res) {
           }
           return response.json();
         })
-        .then((json) => {
+        .then((data) => {
           logWriter(DEBUG, "Get restaurant name successful");
-          restaurantName = json.reply.delivery_detail.name;
+          restaurantName = data.reply.delivery_detail.name;
           getDeliveryDishes(deliveryInfo, req, res);
         })
         .catch((error) => {
@@ -533,41 +532,37 @@ async function saveMenuJson(menuJson, req, res) {
     }
   );
 
-  const orderJson = await getHistoryOrder(req.params.room, restaurantName)
+  const historyOrderJson = await getHistoryOrder(req.params.room, restaurantName)
 
   res.render("room", {
     roomName: req.params.room,
     resName: restaurantName,
     foods: menuJson,
-    orders: orderJson,
-    sumOrders: orderJson,
-    totalItems: 0,
-    totalPrice: 0,
-  });
+    orders: historyOrderJson,
+    sumOrders: summaryOrders(historyOrderJson),
+    totalItems: historyOrderJson.length,
+    totalPrice: calTotalPrice(historyOrderJson),
+  }
+  );
 }
 
 function summaryOrders(ordersJson) {
-  let sumOrders = [];
+  const summary = {};
 
-  for (let i = 0; i < ordersJson.length; i++) {
-    let foodTitle = ordersJson[i].foodTitle;
-    let foodQty = parseInt(ordersJson[i].foodQty);
-    let foodPrice = parseInt(ordersJson[i].foodPrice);
-
-    let order = {};
-
-    if (order[foodTitle]) {
-      order.foodTitle = foodTitle;
-      order.foodQty += foodQty;
+  ordersJson.forEach(item => {
+    if (summary[item.foodTitle]) {
+      summary[item.foodTitle].totalPrice += parseInt(item.foodPrice);
+      summary[item.foodTitle].foodQty += parseInt(item.foodQty);
     } else {
-      order.foodTitle = foodTitle;
-      order.foodQty = foodQty;
+      summary[item.foodTitle] = {
+        foodTitle: item.foodTitle,
+        foodQty: parseInt(item.foodQty),
+        totalPrice: parseInt(item.foodPrice)
+      };
     }
-    order.foodPrice = foodPrice * foodQty;
-    sumOrders.push(order);
-  }
+  });
 
-  return sumOrders;
+  return Object.values(summary);
 }
 
 function calTotalPrice(ordersJson) {
@@ -575,5 +570,5 @@ function calTotalPrice(ordersJson) {
   for (let i = 0; i < ordersJson.length; i++) {
     totalPrice += parseInt(ordersJson[i].foodPrice);
   }
-  return `${totalPrice},000đ`;
+  return `${totalPrice}`;
 }

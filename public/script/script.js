@@ -43,7 +43,7 @@ function confirmDelete(event) {
 }
 
 // Send food oder detail
-function sendOrder(event) {
+function sendOrder() {
   const userName = getCookie("userName");
   if (!userName || userName.length < 1) {
     // User name undefined
@@ -69,10 +69,14 @@ function sendOrder(event) {
 }
 
 // Listen for new order
-socket.on("new-order", (orderResult) => {
+socket.on("new-order", async (orderResult) => {
   switch (orderResult.status) {
     case SUCCESS:
+      // append new order
       appendNewOrder(orderResult.newOrder);
+      // update summary
+      await updateSummary();
+      // notify new order status
       notify(
         TOASTR_SUCCESS,
         `Order Success`,
@@ -87,10 +91,14 @@ socket.on("new-order", (orderResult) => {
 });
 
 // Listen for updated order
-socket.on("update-order", (updatedResult) => {
+socket.on("update-order", async (updatedResult) => {
   switch (updatedResult.status) {
     case SUCCESS:
+      // update order list
       appendUpdatedOrder(updatedResult.updatedOrder);
+      // update summary
+      await updateSummary();
+      // notify update order status
       notify(
         TOASTR_SUCCESS,
         `Updated Success`,
@@ -105,12 +113,15 @@ socket.on("update-order", (updatedResult) => {
 });
 
 // Listen for delete order
-socket.on("delete-order", (deleteResult) => {
+socket.on("delete-order", async (deleteResult) => {
   switch (deleteResult.status) {
     case SUCCESS:
-      // Find order element and remove it
+      // Find and delete order by id
       const deletedOrder = document.getElementById(deleteResult.order._id);
       deletedOrder.parentNode.removeChild(deletedOrder);
+      // update summary
+      await updateSummary();
+      // notify delete status
       notify(
         TOASTR_SUCCESS,
         `Delete Success`,
@@ -119,6 +130,7 @@ socket.on("delete-order", (deleteResult) => {
       break;
 
     case PERMISSION_DENIED:
+      // notify delete status
       notify(
         TOASTR_ERROR,
         `Delete Failed`,
@@ -130,6 +142,73 @@ socket.on("delete-order", (deleteResult) => {
       break;
   }
 });
+
+async function updateSummary() {
+  await fetch(`/API/getOrder?roomName=${roomName}`, {})
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not OK");
+      }
+      return response.json();
+    })
+
+    .then(function (data) {
+      appendSummary(data);
+    })
+
+    .catch(function (err) {
+      console.log(err);
+    });
+
+    function appendSummary(data) {
+      while (summaryContainer.firstChild) {
+        summaryContainer.removeChild(summaryContainer.firstChild);
+      }
+      let totalItems = 0;
+      let totalPrice = 0;
+      let historyOrder = data.order
+
+      const summary = {};
+    
+      historyOrder.forEach(item => {
+        if (summary[item.foodTitle]) {
+          summary[item.foodTitle].totalPrice += parseInt(item.foodPrice);
+          summary[item.foodTitle].foodQty += parseInt(item.foodQty);
+        } else {
+          summary[item.foodTitle] = {
+            foodTitle: item.foodTitle,
+            foodQty: parseInt(item.foodQty),
+            totalPrice: parseInt(item.foodPrice)
+          };
+        }
+      });
+
+      let summaryOrders = Object.values(summary);
+
+      summaryOrders.forEach((order) => {
+        const el = document.createElement("div");
+        el.classList.add("summary-detail");
+        el.innerHTML = `
+            <div class="summary-info">
+                <span class="sum-qty-txt">${order.foodQty}</span>
+                <span class="sum-food-txt">${order.foodTitle}</span>
+            </div>
+            <div class="sum-total-txt">
+                <span>${order.totalPrice}đ</span>
+            </div>
+          `;
+        summaryContainer.appendChild(el);
+        totalItems += order.foodQty;
+        totalPrice += order.totalPrice;
+      });
+
+      const subTotalEl = document.getElementById("sub-total-txt");
+      subTotalEl.innerHTML = `Subtotal (${totalItems} items)`
+    
+      const totalPriceEl = document.getElementById("total-price-txt");
+      totalPriceEl.innerHTML = `${totalPrice}đ`;
+    }
+}
 
 function appendNewOrder(newOrder) {
   const el = document.createElement("li");
@@ -156,38 +235,6 @@ function appendUpdatedOrder(updatedOrder) {
   const orderEl = document.getElementById(updatedOrder._id);
   orderEl.querySelector("#food-amount-txt").innerHTML = `${updatedOrder.foodQty} x `;
   orderEl.querySelector("#note-txt").innerHTML = `Note: ${updatedOrder.foodNote}`;
-}
-
-function appendSummary(summaryOrders) {
-  while (summaryContainer.firstChild) {
-    summaryContainer.removeChild(summaryContainer.firstChild);
-  }
-  let totalItems = 0;
-  let totalPrice = 0;
-
-  summaryOrders.forEach((sumDetail) => {
-    const el = document.createElement("div");
-    el.classList.add("summary-detail");
-    el.innerHTML = `
-        <div class="summary-info">
-            <span class="sum-qty-txt">${sumDetail.foodQty}</span>
-            <span class="sum-food-txt">${sumDetail.foodTitle}</span>
-        </div>
-        <div class="sum-total-txt">
-            <span>${sumDetail.foodPrice},000đ</span>
-        </div>
-      `;
-    summaryContainer.appendChild(el);
-    totalItems += sumDetail.foodQty;
-    totalPrice += sumDetail.foodPrice;
-  });
-
-  const subTotalEl = document.getElementById("sub-total-txt");
-  subTotalEl.innerHTML = `Subtotal (${totalItems} items)`
-
-  const totalPriceEl = document.getElementById("total-price-txt");
-  totalPriceEl.innerHTML = `${totalPrice},000đ`;
-
 }
 
 // Popup confirm order
@@ -298,15 +345,15 @@ const menuItems = menu.querySelectorAll(".menu__item");
 let activeItem = menu.querySelector(".active");
 
 function clickItem(item, index) {
-    menu.style.removeProperty("--timeOut");
-    if (activeItem == item) return;
-    if (activeItem) {
-        activeItem.classList.remove("active");
-    }
-    item.classList.add("active");
-    body.style.backgroundColor = bgColorsBody[index];
-    activeItem = item;
-    // offsetMenuBorder(activeItem, menuBorder);
+  menu.style.removeProperty("--timeOut");
+  if (activeItem == item) return;
+  if (activeItem) {
+    activeItem.classList.remove("active");
+  }
+  item.classList.add("active");
+  body.style.backgroundColor = bgColorsBody[index];
+  activeItem = item;
+  // offsetMenuBorder(activeItem, menuBorder);
 }
 
 // function offsetMenuBorder(element, menuBorder) {
@@ -318,12 +365,12 @@ function clickItem(item, index) {
 // offsetMenuBorder(activeItem, menuBorder);
 
 menuItems.forEach((item, index) => {
-    item.addEventListener("click", () => clickItem(item, index));
+  item.addEventListener("click", () => clickItem(item, index));
 })
 
 window.addEventListener("resize", () => {
-    // offsetMenuBorder(activeItem, menuBorder);
-    menu.style.setProperty("--timeOut", "none");
+  // offsetMenuBorder(activeItem, menuBorder);
+  menu.style.setProperty("--timeOut", "none");
 });
 window.addEventListener("load", () => {
   body.style.backgroundColor = bgColorsBody[0];

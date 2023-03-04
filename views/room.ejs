@@ -22,7 +22,7 @@
     </script>
 
     <title>Group Order ShopeeFood</title>
-</head>
+</head> 
 <body>
     <div class="container">
         <div class="tab-container">
@@ -144,30 +144,24 @@
                           <div class="summary-right--wrapper">
                             <h2 class="order-title">Summary Order</h2>
                             <div class="summary-order-container" id="display-summary">
+
+                              <% sumOrders.forEach((orderDetail)=> { %>
                               <div class="summary-detail">
                                 <div class="summary-info">
-                                  <span class="sum-qty-txt">1</span>
-                                  <span class="sum-food-txt">Bánh tráng cuốn bơ</span>
+                                  <span class="sum-qty-txt"><%= orderDetail.foodQty %></span>
+                                  <span class="sum-food-txt"><%= orderDetail.foodTitle %></span>
                                 </div>
                                 <div class="sum-total-txt">
-                                  <span>29,000đ</span>
+                                  <span><%= orderDetail.totalPrice %>đ</span>
                                 </div>
                               </div>
-                              
-                              <div class="summary-detail">
-                                <div class="summary-info">
-                                  <span class="sum-qty-txt">1</span>
-                                  <span class="sum-food-txt">Trà Tắc Size 1L</span>
-                                </div>
-                                <div class="sum-total-txt">
-                                  <span>15,000đ</span>
-                                </div>
-                              </div>
+                              <% }) %>
+
                             </div>
                             <div class="subtotal-container">
                               <div class="subtotal-info">
-                                <span id="sub-total-txt" class="subtotal-txt">Subtotal (12 items)</span>
-                                <span id="total-price-txt" class="subtotal-price-txt">301,000đ</span>
+                                <span id="sub-total-txt" class="subtotal-txt">Subtotal (<%= totalItems %> items)</span>
+                                <span id="total-price-txt" class="subtotal-price-txt"><%= totalPrice %>đ</span>
                               </div>
                             </div>
 

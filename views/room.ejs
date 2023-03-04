@@ -112,29 +112,27 @@
                                 <li onclick="confirmDelete(this)" id="<%= orderDetail._id %>"
                                   data-room="<%= orderDetail.roomName %>" data-shop="<%= orderDetail.shopName %>">
   
-                                  <span class="order-detail">
+                                  <div class="order-detail">
                                     <img class="user-avatar" alt="User Avatar"
                                       src="https://haycafe.vn/wp-content/uploads/2022/03/hinh-meo-hai-huoc.jpg">
                                     <div class="order-text">
-                                      <div id="order-info-1"><label id="user-txt">
-                                          <%= orderDetail.orderUser %>
-                                        </label><label id="order-time-txt">
-                                          <%= orderDetail.createdTime %>
-                                        </label>
+                                      <div class="order-info order-info-name">
+                                        <span class="user-txt"><%= orderDetail.orderUser %></span>
+                                        <span class="order-time-txt"><%= orderDetail.createdTime %></span>
                                       </div>
-                                      <div id="order-info-2"><label id="food-amount-txt">
-                                          <%= orderDetail.foodQty %> x 
-                                        </label><label id="order-title-txt">
-                                          <%= orderDetail.foodTitle %> x <%=orderDetail.foodPrice %>
-                                        </label>
+                                      <div class="order-info order-info-title">
+                                        <span class="food-amount-txt"><%= orderDetail.foodQty %></span>
+                                        <span> x </span>
+                                        <span class="order-title-txt"><%= orderDetail.foodTitle %></span>
                                       </div>
-                                      <div id="order-info-2">
-                                        <label id="note-txt">
-                                          Note: <%= orderDetail.foodNote %>
-                                        </label>
+                                      <div class="order-info order-infor-price">
+                                        <span class="price-txt">Price: <%=orderDetail.foodPrice %></span>
+                                      </div>
+                                      <div id="order-info order-info-note">
+                                        <span class="note-txt">Note: <%= orderDetail.foodNote %></span>
                                       </div>
                                     </div>
-                                  </span>
+                                  </div>
                                 </li>
                                 <% }) %>
                             </ol>

@@ -218,23 +218,36 @@ function appendNewOrder(newOrder) {
   el.setAttribute("data-shop", newOrder.shopName);
 
   el.innerHTML = `
-            <span class="order-detail">
-                <img class="user-avatar" alt="User Avatar" src="https://haycafe.vn/wp-content/uploads/2022/03/hinh-meo-hai-huoc.jpg">
-                <div class="order-text">
-                  <div id="order-info-1"><label id="user-txt">${newOrder.orderUser} </label><label id="order-time-txt">${newOrder.createdTime}</label></div>
-                  <div id="order-info-2"><label id="food-amount-txt">${newOrder.foodQty} x </label>${newOrder.foodTitle} x ${newOrder.foodPrice}</div>
-                  <div id="order-info-2"><label id="note-txt">Note: ${newOrder.foodNote}</label></div>
+            <div class="order-detail">
+              <img class="user-avatar" alt="User Avatar"
+                src="https://haycafe.vn/wp-content/uploads/2022/03/hinh-meo-hai-huoc.jpg">
+              <div class="order-text">
+                <div class="order-info order-info-name">
+                  <span class="user-txt">${newOrder.orderUser}</span>
+                  <span class="order-time-txt">${newOrder.createdTime}</span>
                 </div>
-            </span>
+                <div class="order-info order-info-title">
+                  <span class="food-amount-txt">${newOrder.foodQty}</span>
+                  <span> x </span>
+                  <span class="order-title-txt">${newOrder.foodTitle}</span>
+                </div>
+                <div class="order-info order-infor-price">
+                  <span class="price-txt">Price: ${newOrder.foodPrice}</span>
+                </div>
+                <div id="order-info order-info-note">
+                  <span class="note-txt">Note: ${newOrder.foodNote}</span>
+                </div>
+              </div>
+            </div>
         `;
+  console.log("🚀 ~ file: script.js:242 ~ appendNewOrder ~ el:", el)
   orderContainer.appendChild(el);
 }
 
 function appendUpdatedOrder(updatedOrder) {
-
   const orderEl = document.getElementById(updatedOrder._id);
-  orderEl.querySelector("#food-amount-txt").innerHTML = `${updatedOrder.foodQty} x `;
-  orderEl.querySelector("#note-txt").innerHTML = `Note: ${updatedOrder.foodNote}`;
+  orderEl.querySelector(".food-amount-txt").innerHTML = `${updatedOrder.foodQty}`;
+  orderEl.querySelector(".note-txt").innerHTML = `Note: ${updatedOrder.foodNote}`;
 }
 
 // Popup confirm order

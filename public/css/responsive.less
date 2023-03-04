@@ -20,6 +20,24 @@
 }
 @media screen and (min-width: @screen-sm-min) {
 }
+@media screen and (max-width: @screen-sm-min) {
+    .tab-pane {
+        padding-top: 0;
+    }
+    .summary-left,
+    .summary-right {
+        overflow: hidden;
+        &--wrapper {
+            height: 100%;
+            padding: 20px 0;
+        }
+    }
+    .orders-list {
+        overflow-y: auto;
+        height: 100%;
+        padding-bottom: 20px;
+    }
+}
 // Phone
 @media screen and (max-width: @screen-xs-max) {
     .nav-item {

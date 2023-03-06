@@ -541,7 +541,7 @@ async function saveMenuJson(menuJson, req, res) {
     foods: menuJson,
     orders: historyOrderJson,
     sumOrders: summaryOrders(historyOrderJson),
-    totalItems: historyOrderJson.length,
+    totalItems: historyOrderJson.reduce((acc, item) => acc + item.foodQty, 0),
     totalPrice: calTotalPrice(historyOrderJson),
   }
   );
@@ -553,11 +553,11 @@ function summaryOrders(ordersJson) {
 
   ordersJson.forEach(item => {
     if (summary[item.foodTitle]) {
-      summary[item.foodTitle].totalPrice += parseInt(item.foodPrice);
       summary[item.foodTitle].foodQty += parseInt(item.foodQty);
-      
+      summary[item.foodTitle].totalPrice = parseInt(item.foodPrice)*parseInt(summary[item.foodTitle].foodQty);
+
       let note = new Object();
-      note.username = item.orderUser;
+      note.userName = item.orderUser;
       note.note = item.foodNote;
       foodNotes.push(note);
 
@@ -571,7 +571,7 @@ function summaryOrders(ordersJson) {
       summary[item.foodTitle] = {
         foodTitle: item.foodTitle,
         foodQty: parseInt(item.foodQty),
-        totalPrice: parseInt(item.foodPrice),
+        totalPrice: parseInt(item.foodPrice)*parseInt(item.foodQty),
         foodNote: foodNotes,
       };
     }
@@ -583,7 +583,7 @@ function summaryOrders(ordersJson) {
 function calTotalPrice(ordersJson) {
   let totalPrice = 0;
   for (let i = 0; i < ordersJson.length; i++) {
-    totalPrice += parseInt(ordersJson[i].foodPrice);
+    totalPrice += parseInt(ordersJson[i].foodPrice)*parseInt(ordersJson[i].foodQty);
   }
   return `${totalPrice}`;
 }

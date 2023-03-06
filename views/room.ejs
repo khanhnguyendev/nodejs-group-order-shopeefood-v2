@@ -126,7 +126,7 @@
                                         <span class="order-title-txt"><%= orderDetail.foodTitle %></span>
                                       </div>
                                       <div class="order-info order-infor-price">
-                                        <span class="price-txt">Price: <%=orderDetail.foodPrice %></span>
+                                        <span class="price-txt">Price: <%=orderDetail.foodPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></span>
                                       </div>
                                       <% if (orderDetail.foodNote) { %>
                                       <div id="order-info order-info-note">
@@ -155,7 +155,7 @@
                                   <% }) %>
                                 </div>
                                 <div class="sum-total-txt">
-                                  <span><%= orderDetail.totalPrice %>đ</span>
+                                  <span><%= orderDetail.totalPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></span>
                                 </div>
                               </div>
                               <% }) %>
@@ -164,7 +164,7 @@
                             <div class="subtotal-container">
                               <div class="subtotal-info">
                                 <span id="sub-total-txt" class="subtotal-txt">Subtotal (<%= totalItems %> items)</span>
-                                <span id="total-price-txt" class="subtotal-price-txt"><%= totalPrice %>đ</span>
+                                <span id="total-price-txt" class="subtotal-price-txt"><%= totalPrice %></span>
                               </div>
                             </div>
 

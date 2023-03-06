@@ -548,36 +548,33 @@ async function saveMenuJson(menuJson, req, res) {
 }
 
 function summaryOrders(ordersJson) {
-  const summary = {};
-  let foodNotes = [];
 
-  ordersJson.forEach(item => {
-    if (summary[item.foodTitle]) {
-      summary[item.foodTitle].foodQty += parseInt(item.foodQty);
-      summary[item.foodTitle].totalPrice = parseInt(item.foodPrice)*parseInt(summary[item.foodTitle].foodQty);
-
-      let note = new Object();
-      note.userName = item.orderUser;
-      note.note = item.foodNote;
-      foodNotes.push(note);
-
-      summary[item.foodTitle].foodNote = foodNotes;
+  const summary = ordersJson.reduce((acc, curr) => {
+    const existing = acc.find(item => item.foodTitle === curr.foodTitle);
+    
+    if (existing) {
+      existing.foodQty += curr.foodQty;
+      existing.totalPrice += curr.foodPrice;
+      existing.foodNote.push({
+        userName: curr.orderUser,
+        note: curr.foodNote
+      });
     } else {
-      let note = new Object();
-      note.userName = item.orderUser
-      note.note = item.foodNote;
-      foodNotes.push(note);
-
-      summary[item.foodTitle] = {
-        foodTitle: item.foodTitle,
-        foodQty: parseInt(item.foodQty),
-        totalPrice: parseInt(item.foodPrice)*parseInt(item.foodQty),
-        foodNote: foodNotes,
-      };
+      acc.push({
+        foodTitle: curr.foodTitle,
+        foodNote: [{
+          userName: curr.orderUser,
+          note: curr.foodNote
+        }],
+        foodQty: curr.foodQty,
+        totalPrice: curr.foodPrice
+      });
     }
-  });
-
-  return Object.values(summary);
+    
+    return acc;
+  }, []);
+  
+  return summary;
 }
 
 function calTotalPrice(ordersJson) {
@@ -585,5 +582,9 @@ function calTotalPrice(ordersJson) {
   for (let i = 0; i < ordersJson.length; i++) {
     totalPrice += parseInt(ordersJson[i].foodPrice)*parseInt(ordersJson[i].foodQty);
   }
-  return `${totalPrice}`;
+  return formatPrice(totalPrice);
+}
+
+function formatPrice(value) {
+  return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 }

@@ -161,36 +161,30 @@ async function updateSummary() {
     let totalPrice = 0;
     let historyOrder = data.order;
 
-    const summary = {};
-    let foodNotes = [];
-
-    historyOrder.forEach((item) => {
-      if (summary[item.foodTitle]) {
-        summary[item.foodTitle].totalPrice += parseInt(item.foodPrice);
-        summary[item.foodTitle].foodQty += parseInt(item.foodQty);
-
-        let note = new Object();
-        note.username = item.orderUser;
-        note.note = item.foodNote;
-        foodNotes.push(note);
-
-        summary[item.foodTitle].foodNote = foodNotes;
+    const summaryOrders = historyOrder.reduce((acc, curr) => {
+      const existing = acc.find(item => item.foodTitle === curr.foodTitle);
+      
+      if (existing) {
+        existing.foodQty += curr.foodQty;
+        existing.totalPrice += curr.foodPrice;
+        existing.foodNote.push({
+          userName: curr.orderUser,
+          note: curr.foodNote
+        });
       } else {
-        let note = new Object();
-        note.userName = item.orderUser;
-        note.note = item.foodNote;
-        foodNotes.push(note);
-
-        summary[item.foodTitle] = {
-          foodTitle: item.foodTitle,
-          foodQty: parseInt(item.foodQty),
-          totalPrice: parseInt(item.foodPrice),
-          foodNote: foodNotes,
-        };
+        acc.push({
+          foodTitle: curr.foodTitle,
+          foodNote: [{
+            userName: curr.orderUser,
+            note: curr.foodNote
+          }],
+          foodQty: curr.foodQty,
+          totalPrice: curr.foodPrice
+        });
       }
-    });
-
-    let summaryOrders = Object.values(summary);
+      
+      return acc;
+    }, []);
 
     summaryOrders.forEach((order) => {
       const el = document.createElement("div");
@@ -201,7 +195,7 @@ async function updateSummary() {
                 <span class="sum-food-txt">${order.foodTitle}</span>
             </div>
             <div class="sum-total-txt">
-                <span>${order.totalPrice}đ</span>
+                <span>${formatPrice(order.totalPrice)}</span>
             </div>
           `;
       summaryContainer.appendChild(el);
@@ -213,7 +207,7 @@ async function updateSummary() {
     subTotalEl.innerHTML = `Subtotal (${totalItems} items)`;
 
     const totalPriceEl = document.getElementById("total-price-txt");
-    totalPriceEl.innerHTML = `${totalPrice}đ`;
+    totalPriceEl.innerHTML = `${formatPrice(totalPrice)}`;
   }
 }
 
@@ -244,7 +238,7 @@ function appendNewOrder(newOrder) {
                   <span class="order-title-txt">${newOrder.foodTitle}</span>
                 </div>
                 <div class="order-info order-infor-price">
-                  <span class="price-txt">Price: ${newOrder.foodPrice}</span>
+                  <span class="price-txt">Price: ${formatPrice(newOrder.foodPrice)}</span>
                 </div>
                 <div id="order-info order-info-note">
                   <span class="note-txt">${spanFoodNote}</span>
@@ -395,6 +389,10 @@ function clickItem(item, index) {
 menuItems.forEach((item, index) => {
   item.addEventListener("click", () => clickItem(item, index));
 });
+
+function formatPrice(value) {
+  return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
+}
 
 window.addEventListener("resize", () => {
   // offsetMenuBorder(activeItem, menuBorder);

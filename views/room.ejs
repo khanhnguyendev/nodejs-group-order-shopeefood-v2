@@ -18,7 +18,9 @@
     <script defer src="/script/toastr.min.js"></script>
 
     <script>
+      const roomId = "<%= roomId %>"
       const roomName = "<%= roomName %>"
+      const deliveryId = "<%= deliveryId %>"
     </script>
 
     <title>Group Order ShopeeFood</title>
@@ -95,7 +97,7 @@
                             </div>
                             <a onclick="showPopupConfirmOrder(this)" class="btn mt-3 add-to-cart" 
                               data-title="<%= food.title %>" data-price="<%= food.price %>" data-des="<%= food.des %>">
-                              <%= food.price %>
+                              <%= food.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %>
                             </a>
                           </div>
                           <% }) %>
@@ -110,7 +112,7 @@
                             <ol class="orders-list" id="display-order">
                               <% orders.forEach((orderDetail)=> { %>
                                 <li onclick="confirmDelete(this)" id="<%= orderDetail._id %>"
-                                  data-room="<%= orderDetail.roomName %>" data-shop="<%= orderDetail.shopName %>">
+                                  data-room-id="<%= orderDetail.roomId %>" data-delivery-id="<%= orderDetail.deliveryId %>">
   
                                   <div class="order-detail">
                                     <img class="user-avatar" alt="User Avatar"

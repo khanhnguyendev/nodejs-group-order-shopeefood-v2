@@ -8,9 +8,7 @@ const express = require("express"),
 
 const RoomSchema = require("./models/Room");
 const MenuSchema = require("./models/Menu");
-const OrderDetailSchema = require("./models/OrderDetail");
-const OrderHistory = require("./models/OrderHistory");
-const { create } = require("./models/OrderHistory");
+const OrderSchema = require("./models/Order");
 
 (morgan = require("morgan")), (path = require("path"));
 
@@ -19,7 +17,6 @@ cron = require("node-cron");
 // Use env port or default
 const port = process.env.PORT || 5000;
 const baseUrl = process.env.BASE_URL || "http://localhost:5000";
-let roomName = '';
 
 // TODO: add to config file
 const CONNECTION = "CONNECTION";
@@ -55,16 +52,17 @@ connection.once("open", () => {
   console.log("MongoDB database connected");
 
   console.log("Setting change streams");
-  const thoughtChangeStream = connection.collection("orderhistories").watch();
+  const thoughtChangeStream = connection.collection("orders").watch();
 
   thoughtChangeStream.on("change", async (change) => {
     switch (change.operationType) {
       case "insert":
         const newOrder = {
           _id: change.fullDocument._id,
-          shopName: change.fullDocument.shopName,
-          roomName: change.fullDocument.roomName,
+          roomId: change.fullDocument.roomId,
+          deliveryId: change.fullDocument.deliveryId,
           orderUser: change.fullDocument.orderUser,
+          ipUser: change.fullDocument.ipUser,
           foodTitle: change.fullDocument.foodTitle,
           foodPrice: change.fullDocument.foodPrice,
           foodQty: change.fullDocument.foodQty,
@@ -83,7 +81,7 @@ connection.once("open", () => {
         break;
 
       case "update":
-        const updatedOrder = await OrderHistory.find({
+        const updatedOrder = await OrderSchema.find({
           _id: change.documentKey._id,
         }).select(["-__v"]);
 
@@ -97,14 +95,6 @@ connection.once("open", () => {
         break;
 
       case "delete":
-        // let deleteResult = {}
-        // let order = {}
-        // order._id = change.documentKey._id
-
-        // deleteResult.status = SUCCESS;
-        // deleteResult.order = order
-
-        // io.emit("delete-order", deleteResult);
 
         console.log(`Mongoose successfully deleted ${change.documentKey._id}`);
         break;
@@ -112,9 +102,9 @@ connection.once("open", () => {
   });
 });
 
-//schedule deletion of thoughts at midnight
+//schedule deletion of rooms at midnight
 cron.schedule("0 0 0 * * *", async () => {
-  await connection.collection("thoughts").drop();
+  await connection.collection("rooms").drop();
 
   io.of("/api/socket").emit("thoughtsCleared");
 });
@@ -132,6 +122,11 @@ app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 
 const rooms = {};
+let roomName = '';
+let roomId = '';
+let deliveryId = ''
+let restaurantId = ''
+let restaurantName = ''
 
 //bodyParser middleware used for resolving the req and res body objects (urlEncoded and json formats)
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -151,21 +146,14 @@ app.post("/room", async (req, res) => {
   }
 
   roomName = req.body.orderShopName;
+  rooms[roomName] = { users: {} };
   shopUrl = req.body.orderShopUrl.replace("https://shopeefood.vn/", "");
-  let deliveryId = ''
-  let restaurantId = ''
-  let restaurantName = ''
   let restaurantDes = ''
 
-  const room = await RoomSchema.findOne({ roomName });
-
-  if (!room) {
-    const deliveryInfo = await axios.get(`${baseUrl}/API/getDeliveryInfo?shopUrl=${shopUrl}`
-    );
-    if (deliveryInfo.data.result == 'success') {
-      restaurantId = deliveryInfo.data.reply.restaurant_id
-      deliveryId = deliveryInfo.data.reply.delivery_id
-    }
+  const deliveryInfo = await axios.get(`${baseUrl}/API/getDeliveryInfo?shopUrl=${shopUrl}`);
+  if (deliveryInfo.data.result == 'success') {
+    restaurantId = deliveryInfo.data.reply.restaurant_id
+    deliveryId = deliveryInfo.data.reply.delivery_id
   }
 
   if (deliveryId) {
@@ -175,49 +163,50 @@ app.post("/room", async (req, res) => {
       restaurantDes = restaurantInfo.data.reply.delivery_detail.short_description
     }
   }
+
+  const room = await RoomSchema.findOne({ roomName, restaurantId, deliveryId});
+  if (!room) {
+    const roomSchema = new RoomSchema({
+      roomName: roomName,
+      deliveryId: deliveryId,
+      shopId : restaurantId,
+      shopName: restaurantName,
+      description: restaurantDes,
+      capacity: 99,
+      createdAt: new Date(),
+    })
+    await roomSchema.save();
+    roomId = roomSchema._id
+  } else {
+    roomId = room._id
+  }
   
-  rooms[roomName] = { users: {} };
+  const menu = await MenuSchema.find({ deliveryId });
 
-  const roomSchema = new RoomSchema({
-    roomName: roomName,
-    deliveryId: deliveryId,
-    shopId : restaurantId,
-    shopName: restaurantName,
-    description: restaurantDes,
-    capacity: 99,
-    createdAt: new Date(),
-  })
-
-  await roomSchema.save();
-
-  const roomId = roomSchema._id
-
-  const resDishes = await axios.get(`${baseUrl}/API/getResDishes?&requestId=${deliveryId}`)
-  if (resDishes.data.result == 'success') {
-    console.log(resDishes.data.reply)
-    const menuInfo = resDishes.data.reply.menu_infos
-
-    menuInfo.forEach((menuInfo) => {
-      menuInfo.dishes.forEach((dish) => {
-        const menuSchema = new MenuSchema({
-          room: roomId,
-          title: dish.name,
-          image: dish.photos[1].value,
-          price: priceParser(dish.price.text),
-          description: dish.description,
-        })
-        menuSchema.save();
+  if (menu.length == 0) {
+    const resDishes = await axios.get(`${baseUrl}/API/getResDishes?&requestId=${deliveryId}`)
+    if (resDishes.data.result == 'success') {
+      const menuInfo = resDishes.data.reply.menu_infos
+  
+      menuInfo.forEach((menuInfo) => {
+        menuInfo.dishes.forEach((dish) => {
+          const menuSchema = new MenuSchema({
+            room: roomId,
+            deliveryId: deliveryId,
+            title: dish.name,
+            image: dish.photos[1].value,
+            price: priceParser(dish.price.text),
+            description: dish.description,
+          })
+          menuSchema.save();
+        });
       });
-    });
-    
+      
+    }
   }
 
   res.redirect(roomName);
 });
-
-function priceParser(priceStr) {
-  return priceStr.parseInt(str.replace(/[,đ]/g, ""))
-}
 
 // Render room page
 app.get("/:room", async (req, res) => {
@@ -225,33 +214,52 @@ app.get("/:room", async (req, res) => {
   if (!room) {
     return res.redirect("/");
   }
+  const roomName = req.params.room
 
-  let menuInfo = [];
+  // Get room information
+  const roomInfo = await RoomSchema.findOne({ roomName, deliveryId })
 
-  const hisOrderJSON = await getHistoryOrder(req.params.room, "restaurantName");
+  roomId = roomInfo._id
+
+  // Get menu from database
+  const menus = await getMenuByDeliveryId(deliveryId);
+
+  // Get order history from database
+  const orders = await getHistoryOrder(roomId, deliveryId);
 
   // Render for refresh or new connection
   res.render("room", {
-    roomName: req.params.room,
-    resName: "restaurantName",
-    foods: menuInfo,
-    orders: hisOrderJSON,
-    sumOrders: summaryOrders(hisOrderJSON),
-    totalItems: hisOrderJSON.reduce((acc, order) => acc + order.foodQty, 0),
-    totalPrice: calTotalPrice(hisOrderJSON),
+    roomName: roomName,
+    roomId : roomId,
+    deliveryId: deliveryId,
+    resName: restaurantName,
+    foods: menus,
+    orders: orders,
+    sumOrders: summaryOrders(orders),
+    totalItems: orders.reduce((acc, order) => acc + order.foodQty, 0),
+    totalPrice: calTotalPrice(orders),
   });
 });
 
-async function getHistoryOrder(roomName, shopName) {
+async function getMenuByDeliveryId(deliveryId) {
   try {
-    const orderResult = await axios.get(
-      `${baseUrl}/API/getOrder?roomName=${roomName}&shopName=${shopName}`
-    );
-    if (orderResult?.data) {
-      console.log(orderResult.data);
-      return orderResult.data.order;
+    const menus = await axios.get(`${baseUrl}/API/getMenuByDeliveryId?requestId=${deliveryId}`);
+    if (menus?.data && menus.data.result == SUCCESS) {
+      return menus.data.reply;
     }
-    return orderResult;
+    return menus;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function getHistoryOrder(roomId, deliveryId) {
+  try {
+    const orders = await axios.get(`${baseUrl}/API/getOrder?roomId=${roomId}&requestId=${deliveryId}`);
+    if (orders?.data && orders.data.result == SUCCESS) {
+      return orders.data.reply;
+    }
+    return orders;
   } catch (error) {
     console.error(error);
   }
@@ -292,27 +300,20 @@ io.on("connection", (socket) => {
       ""
     );
 
-    console.log(
-      `Order from ${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`
-    );
-
-    let roomName = orderReq.roomName;
-    let shopName = orderReq.shopName;
     let orderUser = orderReq.orderUser;
     let foodTitle = orderReq.foodTitle;
     let foodPrice = priceParser(orderReq.foodPrice);
     let foodQty = parseInt(orderReq.foodQty);
     let foodNote = orderReq.foodNote;
-    let ipUser = clientIp;
+    let ipUser = clientIp
+
+    console.log(
+      `Order from ${orderUser}@${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`
+    );
 
     try {
-      // Check if there is an existing order with the same roomName, orderUser, foodTitle
-      let historyOrder = await OrderHistory.findOne({
-        roomName,
-        orderUser,
-        foodTitle,
-        ipUser,
-      });
+      // Check if there is an existing order with the same roomId, deliveryId, orderUser, foodTitle
+      let historyOrder = await OrderSchema.findOne({roomId, deliveryId, orderUser, foodTitle, ipUser});
 
       if (historyOrder) {
         // If an existing order is found, update the foodQty, updatedTime
@@ -325,15 +326,15 @@ io.on("connection", (socket) => {
         console.log(`Order updated: \n ${JSON.stringify(historyOrder)}`);
       } else {
         // If no existing order is found, create a new order
-        const newOrder = new OrderHistory({
-          roomName: roomName,
-          shopName: shopName,
+        const newOrder = new OrderSchema({
+          roomId: roomId,
+          deliveryId: deliveryId,
           orderUser: orderUser,
+          ipUser: clientIp,
           foodTitle: foodTitle,
           foodPrice: foodPrice,
           foodQty: foodQty,
           foodNote: foodNote,
-          ipUser: ipUser,
           createdTime: new Date(),
           updatedTime: new Date(),
         });
@@ -353,34 +354,33 @@ io.on("connection", (socket) => {
       "::ffff:",
       ""
     );
-
-    let roomName = deletedReq.roomName;
-    let shopName = deletedReq.shopName;
+    let roomId = deletedReq.roomId;
+    let deliveryId = deletedReq.deliveryId;
     let deletedUser = deletedReq.deleteUser;
 
+    const room = await RoomSchema.findOne({ _id: roomId, deliveryId})
+    if (room.length == 0) {
+      console.log(`Error with deleting order: \n`, deletedReq);
+      return;
+    }
+
     console.log(
-      `Delete order from ${deletedUser}@${clientIp} to ${roomName}@${shopName}`
+      `Delete order from ${deletedUser}@${clientIp} to ${room.roomName}@${room.shopName}`
     );
 
-    let historyOrder = await OrderHistory.findOne({ _id: deletedReq.orderId });
+    let order = await OrderSchema.findOne({ _id: deletedReq.orderId });
 
-    if (
-      !historyOrder ||
-      historyOrder.roomName != roomName ||
-      historyOrder.shopName != shopName ||
-      historyOrder.orderUser != deletedUser ||
-      historyOrder.ipUser != clientIp
-    ) {
+    if (!order || order.orderUser != deletedUser || order.ipUser != clientIp) {
       console.log(
         `User ${deletedUser}@${clientIp} permission denied: \nOrderId`,
         deletedReq.orderId
       );
       let deleteResult = {};
       deleteResult.status = PERMISSION_DENIED;
-      deleteResult.order = historyOrder;
+      deleteResult.order = order;
       return io.emit("delete-order", deleteResult);
     }
-    const deletedOrder = await OrderHistory.findOneAndDelete({
+    const deletedOrder = await OrderSchema.findOneAndDelete({
       _id: deletedReq.orderId,
     });
     if (!deletedOrder) {
@@ -393,249 +393,12 @@ io.on("connection", (socket) => {
     }
     let deleteResult = {};
     deleteResult.status = SUCCESS;
-    deleteResult.order = historyOrder;
+    deleteResult.order = order;
     return io.emit("delete-order", deleteResult);
   });
 });
 
-// String price to int
-function priceParser(strPrice) {
-  return parseInt(strPrice.replace(/[^\d]/g, ""));
-}
-
-// Get user in room
-function getUserRooms(socket) {
-  return Object.entries(rooms).reduce((names, [name, room]) => {
-    if (room.users[socket.id] != null) names.push(name);
-    return names;
-  }, []);
-}
-
-// Get current date time
-function getDateTime() {
-  var currentDate = new Date();
-  return (
-    "[" +
-    String(currentDate.getDate()).padStart(2, "0") +
-    "/" +
-    String(currentDate.getMonth() + 1).padStart(2, "0") +
-    "/" +
-    currentDate.getFullYear() +
-    " @ " +
-    String(currentDate.getHours()).padStart(2, "0") +
-    ":" +
-    String(currentDate.getMinutes()).padStart(2, "0") +
-    ":" +
-    String(currentDate.getSeconds()).padStart(2, "0")
-  );
-}
-
-// Log Writer
-function logWriter(type, message) {
-  console.log(getDateTime() + " " + type + "] " + message);
-}
-
-async function fetchShopeeFood(req, res) {
-  getResId(req, res);
-}
-
-// Get Restaurant ID
-async function getResId(req, res) {
-  await import("node-fetch")
-    .then((module) => {
-      const fetch = module.default;
-
-      fetch(
-        "https://gappapi.deliverynow.vn/api/delivery/get_from_url?url=" +
-          shopUrl.replace("https://shopeefood.vn/", ""),
-        {
-          method: "GET",
-          headers: {
-            "x-foody-access-token": "",
-            "x-foody-api-version": "1",
-            "x-foody-app-type": "1004",
-            "x-foody-client-id": "",
-            "x-foody-client-language": "en",
-            "x-foody-client-type": "1",
-            "x-foody-client-version": "3.0.0",
-          },
-        }
-      )
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Network response was not OK");
-          }
-          return response.json();
-        })
-        .then((deliveryInfo) => {
-          logWriter(DEBUG, "Get delivery info successful");
-          getRestaurantName(deliveryInfo, req, res);
-        })
-        .catch((error) => {
-          logWriter(
-            DEBUG,
-            "There has been a problem with your fetch operation" + error
-          );
-          logWriter(DEBUG, "getResId " + error);
-        });
-    })
-    .catch((error) => console.error(error));
-}
-
-// Get Restaurant Name
-async function getRestaurantName(deliveryInfo, req, res) {
-  let API = `https://gappapi.deliverynow.vn/api/delivery/get_detail?id_type=2&request_id=${deliveryInfo.reply.delivery_id}`;
-
-  await import("node-fetch")
-    .then((module) => {
-      const fetch = module.default;
-
-      fetch(API, {
-        method: "GET",
-        headers: {
-          "x-foody-client-id": "",
-          "x-foody-client-type": "1",
-          "x-foody-app-type": "1004",
-          "x-foody-client-version": "3.0.0",
-          "x-foody-api-version": "1",
-          "x-foody-client-language": "vi",
-          "x-foody-access-token":
-            "6cf780ed31c8c4cd81ee12b0f3f4fdaf05ddf91a29ffce73212e4935ed9295fd354df0f4bc015478450a19bf80fddbe13302a61aa0c705af8315aae5a8e9cd6b",
-        },
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Network response was not OK");
-          }
-          return response.json();
-        })
-        .then((data) => {
-          logWriter(DEBUG, "Get restaurant name successful");
-          restaurantName = data.reply.delivery_detail.name;
-          getDeliveryDishes(deliveryInfo, req, res);
-        })
-        .catch((error) => {
-          logWriter(
-            DEBUG,
-            "There has been a problem with your fetch operation"
-          );
-          logWriter(DEBUG, "getRestaurantName " + error);
-        });
-    })
-    .catch((error) => console.error(error));
-}
-
-async function getDeliveryDishes(deliveryInfo, req, res) {
-  let urlAPI = `https://gappapi.deliverynow.vn/api/dish/get_delivery_dishes?id_type=2&request_id=${deliveryInfo.reply.delivery_id}`;
-
-  await import("node-fetch")
-    .then((module) => {
-      const fetch = module.default;
-
-      fetch(urlAPI, {
-        method: "GET",
-        headers: {
-          "x-foody-client-id": "",
-          "x-foody-client-type": "1",
-          "x-foody-app-type": "1004",
-          "x-foody-client-version": "3.0.0",
-          "x-foody-api-version": "1",
-          "x-foody-client-language": "vi",
-          "x-foody-access-token":
-            "6cf780ed31c8c4cd81ee12b0f3f4fdaf05ddf91a29ffce73212e4935ed9295fd354df0f4bc015478450a19bf80fddbe13302a61aa0c705af8315aae5a8e9cd6b",
-        },
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Network response was not OK");
-          }
-          return response.json();
-        })
-        .then((json) => {
-          logWriter(DEBUG, "Get delivery detail successful");
-          // Filter menu list
-          getMenuJson(json, req, res);
-        })
-        .catch((error) => {
-          logWriter(
-            DEBUG,
-            "There has been a problem with your fetch operation"
-          );
-          logWriter(DEBUG, "getDeliveryDishes " + error);
-        });
-    })
-    .catch((error) => console.error(error));
-}
-
-/**
- * Get menu list
- */
-function getMenuJson(json, req, res) {
-  let menuJson = [];
-  json.reply.menu_infos.forEach((menuInfo) => {
-    menuInfo.dishes.forEach((dish) => {
-      let menu = {
-        title: dish.name,
-        image: dish.photos[1].value,
-        des: dish.description,
-        price: dish.price.text,
-      };
-      menuJson.push(menu);
-    });
-  });
-
-  // Write to file
-  saveMenuJson(menuJson, req, res);
-}
-
-/**
- * Saving menu list to file
- */
-async function saveMenuJson(menuJson, req, res) {
-  // fs.writeFile(
-  //   __dirname + "/dataJSON/menu.json",
-  //   JSON.stringify(menuJson),
-  //   "utf8",
-  //   function (err) {
-  //     if (err) {
-  //       logWriter(DEBUG, "An error occured while writing JSON Object to File.");
-  //       return logWriter(err);
-  //     }
-  //     logWriter(DEBUG, "Saving menu JSON complete...");
-  //   }
-  // );
-
-  // If no existing order is found, create a new order
-  for (let i = 0; i < menuJson.length; i++) {
-    const menu = new MenuSchema({
-      title: menuJson[i].title,
-      image: menuJson[i].image,
-      price: menuJson[i].price,
-      description: menuJson[i].des,
-      room: rooms._id,
-    });
-
-    await menu.save();
-  }
-
-  console.log(`Menu saved: \n ${JSON.stringify(menuJson)}`);
-
-  const historyOrderJson = await getHistoryOrder(
-    req.params.room,
-    restaurantName
-  );
-
-  res.render("room", {
-    roomName: req.params.room,
-    resName: restaurantName,
-    foods: menuJson,
-    orders: historyOrderJson,
-    sumOrders: summaryOrders(historyOrderJson),
-    totalItems: historyOrderJson.reduce((acc, item) => acc + item.foodQty, 0),
-    totalPrice: calTotalPrice(historyOrderJson),
-  });
-}
-
+// Summarize the orders
 function summaryOrders(ordersJson) {
   const summary = ordersJson.reduce((acc, curr) => {
     const existing = acc.find((item) => item.foodTitle === curr.foodTitle);
@@ -665,6 +428,43 @@ function summaryOrders(ordersJson) {
   }, []);
 
   return summary;
+}
+
+// String price to int
+function priceParser(strPrice) {
+  return parseInt(strPrice.replace(/[^\d]/g, ""));
+}
+
+// Get user in room
+function getUserRooms(socket) {
+  return Object.entries(rooms).reduce((names, [name, room]) => {
+    if (room.users[socket.id] != null) names.push(name);
+    return names;
+  }, []);
+}
+
+// Log Writer
+function logWriter(type, message) {
+  console.log(getDateTime() + " " + type + "] " + message);
+}
+
+// Get current date time
+function getDateTime() {
+  var currentDate = new Date();
+  return (
+    "[" +
+    String(currentDate.getDate()).padStart(2, "0") +
+    "/" +
+    String(currentDate.getMonth() + 1).padStart(2, "0") +
+    "/" +
+    currentDate.getFullYear() +
+    " @ " +
+    String(currentDate.getHours()).padStart(2, "0") +
+    ":" +
+    String(currentDate.getMinutes()).padStart(2, "0") +
+    ":" +
+    String(currentDate.getSeconds()).padStart(2, "0")
+  );
 }
 
 function calTotalPrice(ordersJson) {

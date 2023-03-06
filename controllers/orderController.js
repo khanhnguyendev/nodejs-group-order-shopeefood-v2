@@ -1,4 +1,5 @@
-const OrderHistory = require("../models/OrderHistory");
+const OrderSchema = require("../models/Order");
+const MenuSchema = require("../models/Menu");
 
 const getDeliveryInfo = async (req, res) => {
   await import("node-fetch")
@@ -117,16 +118,34 @@ const getResDishes = async (req, res) => {
     .catch((error) => console.error(error));
 };
 
+const getMenuByDeliveryId = async (req, res) => {
+  try {
+    const deliveryId = req.query.requestId;
+    const menus = await MenuSchema.find({ deliveryId });
+
+    return res.json({
+      result: 200,
+      reply: menus,
+    });
+  } catch (error) {
+    console.log("Error with adding thought: ", error);
+    return res.json({
+      result: false,
+      reply: "Error with adding thought. See server console for more info.",
+    });
+  }
+};
+
 const addOrder = async (req, res) => {
   try {
-    const order = await OrderHistory.create({
+    const order = await OrderSchema.create({
       name: req.body.name,
       description: req.body.description,
     });
 
     return res.json({
       success: 200,
-      message: "OrderHistory successfully added.",
+      message: "Order successfully added.",
     });
   } catch (error) {
     console.log("Error with adding thought: ", error);
@@ -139,15 +158,14 @@ const addOrder = async (req, res) => {
 
 const getOrder = async (req, res) => {
   try {
-    const roomName = req.query.roomName;
-    const shopName = req.query.shopName;
-    const orderHistory = await OrderHistory.find({ roomName }).select(["-__v"]);
+    const roomId = req.query.roomId;
+    const deliveryId = req.query.requestId;
 
-    console.log(orderHistory);
+    const orders = await OrderSchema.find({ roomId, deliveryId }).select(["-__v"]);
 
     return res.json({
-      success: 200,
-      order: orderHistory,
+      result: 200,
+      reply: orders,
     });
   } catch (error) {
     console.log("Error with fetching thoughts: ", error);
@@ -164,5 +182,6 @@ module.exports = {
   getOrder,
   getDeliveryInfo,
   getResInfo,
-  getResDishes
+  getResDishes,
+  getMenuByDeliveryId
 };

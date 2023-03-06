@@ -1,12 +1,20 @@
 const mongoose = require('mongoose');
 
-const orderDetailSchema = new mongoose.Schema({
+const orderSchema = new mongoose.Schema({
   roomId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Room',
     required: true
   },
+  deliveryId: {
+    type: String,
+    required: true,
+  },
   orderUser: {
+    type: String,
+    required: true
+  },
+  ipUser: {
     type: String,
     required: true
   },
@@ -23,12 +31,16 @@ const orderDetailSchema = new mongoose.Schema({
     required: true
   },
   foodNote: String,
-  orderTime: {
+  createdTime: {
+    type: Date,
+    default: Date.now
+  },
+  updatedTime: {
     type: Date,
     default: Date.now
   }
 });
 
-const OrderDetail = mongoose.model('OrderDetail', orderDetailSchema);
+const Order = mongoose.model('Order', orderSchema);
 
-module.exports = OrderDetail;
+module.exports = Order;

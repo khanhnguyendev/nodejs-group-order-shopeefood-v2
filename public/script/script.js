@@ -32,9 +32,9 @@ socket.on("room-created", (room) => {
 function confirmDelete(event) {
   let deletedOrder = {
     orderId: event.getAttribute("id"),
-    roomName: event.getAttribute("data-room"),
-    shopName: event.getAttribute("data-shop"),
     deleteUser: getCookie("userName"),
+    roomId: event.getAttribute("data-room-id"),
+    deliveryId: event.getAttribute("data-delivery-id"),
   };
   socket.emit("delete", deletedOrder);
 }
@@ -137,7 +137,7 @@ socket.on("delete-order", async (deleteResult) => {
 });
 
 async function updateSummary() {
-  await fetch(`/API/getOrder?roomName=${roomName}`, {})
+  await fetch(`/API/getOrder?roomId=${roomId}&requestId=${deliveryId}`, {})
     .then((response) => {
       if (!response.ok) {
         throw new Error("Network response was not OK");
@@ -159,9 +159,9 @@ async function updateSummary() {
     }
     let totalItems = 0;
     let totalPrice = 0;
-    let historyOrder = data.order;
+    let orders = data.reply;
 
-    const summaryOrders = historyOrder.reduce((acc, curr) => {
+    const summaryOrders = orders.reduce((acc, curr) => {
       const existing = acc.find(item => item.foodTitle === curr.foodTitle);
       
       if (existing) {
@@ -215,12 +215,15 @@ function appendNewOrder(newOrder) {
   const el = document.createElement("li");
   el.id = newOrder._id;
   el.setAttribute("onclick", "confirmDelete(this)");
-  el.setAttribute("data-room", newOrder.roomName);
-  el.setAttribute("data-shop", newOrder.shopName);
+  el.setAttribute("data-room-id", newOrder.roomId);
+  el.setAttribute("data-delivery-id", newOrder.deliveryId);
 
-  let spanFoodNote = ``;
+  let divFoodNote = ``;
   if (newOrder.foodNote) {
-    spanFoodNote = `${newOrder.foodNote}`;
+    divFoodNote = `
+      <div id="order-info order-info-note">
+        <span class="note-txt">${newOrder.foodNote}</span>
+      </div>`;
   }
 
   el.innerHTML = `
@@ -240,9 +243,7 @@ function appendNewOrder(newOrder) {
                 <div class="order-info order-infor-price">
                   <span class="price-txt">Price: ${formatPrice(newOrder.foodPrice)}</span>
                 </div>
-                <div id="order-info order-info-note">
-                  <span class="note-txt">${spanFoodNote}</span>
-                </div>
+                ${divFoodNote}
               </div>
             </div>
         `;
@@ -255,9 +256,11 @@ function appendUpdatedOrder(updatedOrder) {
   orderEl.querySelector(
     ".food-amount-txt"
   ).innerHTML = `${updatedOrder.foodQty}`;
-  orderEl.querySelector(
-    ".note-txt"
-  ).innerHTML = `Note: ${updatedOrder.foodNote}`;
+  if (updatedOrder.foodNote) {
+    orderEl.querySelector(
+      ".note-txt"
+    ).innerHTML = `${updatedOrder.foodNote}`;
+  }
 }
 
 // Popup confirm order

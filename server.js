@@ -4,16 +4,22 @@ const express = require("express"),
   orderRoutes = require("./routes/orderRoutes"),
   cors = require("cors"),
   fs = require("fs"),
-  axios = require('axios');
+  axios = require("axios");
+
+const RoomSchema = require("./models/Room");
+const MenuSchema = require("./models/Menu");
+const OrderDetailSchema = require("./models/OrderDetail");
 const OrderHistory = require("./models/OrderHistory");
-morgan = require("morgan"),
-  path = require("path");
+const { create } = require("./models/OrderHistory");
+
+(morgan = require("morgan")), (path = require("path"));
 
 cron = require("node-cron");
 
 // Use env port or default
 const port = process.env.PORT || 5000;
 const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+let roomName = '';
 
 // TODO: add to config file
 const CONNECTION = "CONNECTION";
@@ -31,8 +37,8 @@ const io = require("socket.io")(server);
 
 //start the server
 server.listen(port, () => {
-  console.log(`Server now running on port ${port}!`)
-  console.log(`http://localhost:${port}`)
+  console.log(`Server now running on port ${port}!`);
+  console.log(`http://localhost:${port}`);
 });
 
 //connect to db
@@ -67,9 +73,9 @@ connection.once("open", () => {
           updatedTime: change.fullDocument.updatedTime,
         };
 
-        let orderResult = {}
+        let orderResult = {};
         orderResult.status = SUCCESS;
-        orderResult.newOrder = newOrder
+        orderResult.newOrder = newOrder;
 
         console.log(`Mongoose successfully created ${change.documentKey._id}`);
 
@@ -77,12 +83,13 @@ connection.once("open", () => {
         break;
 
       case "update":
+        const updatedOrder = await OrderHistory.find({
+          _id: change.documentKey._id,
+        }).select(["-__v"]);
 
-        const updatedOrder = await OrderHistory.find({ _id: change.documentKey._id }).select(["-__v"]);
-
-        let updatedResult = {}
+        let updatedResult = {};
         updatedResult.status = SUCCESS;
-        updatedResult.updatedOrder = updatedOrder[0]
+        updatedResult.updatedOrder = updatedOrder[0];
 
         console.log(`Mongoose successfully updated ${change.documentKey._id}`);
 
@@ -119,7 +126,7 @@ app.use(cors());
 //morgan used for logging HTTP requests to the console
 app.use(morgan("dev"));
 
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + "/public"));
 app.use(express.urlencoded({ extended: true }));
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
@@ -137,30 +144,80 @@ app.get("/", (req, res) => {
   res.render("index", { rooms: rooms });
 });
 
-app.post("/room", (req, res) => {
+app.post("/room", async (req, res) => {
   // Handle url not available
   if (rooms[req.body.orderShopName] != null) {
     return res.redirect("/");
   }
 
-  // Clear menu before create new room
-  fs.writeFile(__dirname + "/dataJSON/menu.json", "[]", function () {
-    logWriter(DATA, "Menu has been reset");
-  });
+  roomName = req.body.orderShopName;
+  shopUrl = req.body.orderShopUrl.replace("https://shopeefood.vn/", "");
+  let deliveryId = ''
+  let restaurantId = ''
+  let restaurantName = ''
+  let restaurantDes = ''
 
-  // Clear order log before create new room
-  fs.writeFile(__dirname + "/dataJSON/orders.json", "[]", function () {
-    logWriter(DATA, "Order log has been cleared");
-  });
+  const room = await RoomSchema.findOne({ roomName });
 
-  roomName = req.body.orderShopName
+  if (!room) {
+    const deliveryInfo = await axios.get(`${baseUrl}/API/getDeliveryInfo?shopUrl=${shopUrl}`
+    );
+    if (deliveryInfo.data.result == 'success') {
+      restaurantId = deliveryInfo.data.reply.restaurant_id
+      deliveryId = deliveryInfo.data.reply.delivery_id
+    }
+  }
+
+  if (deliveryId) {
+    const restaurantInfo = await axios.get(`${baseUrl}/API/getResInfo?requestId=${deliveryId}`);
+    if (restaurantInfo.data.result == 'success') {
+      restaurantName = restaurantInfo.data.reply.delivery_detail.name
+      restaurantDes = restaurantInfo.data.reply.delivery_detail.short_description
+    }
+  }
+  
   rooms[roomName] = { users: {} };
 
-  // Get shop url
-  shopUrl = req.body.orderShopUrl;
+  const roomSchema = new RoomSchema({
+    roomName: roomName,
+    deliveryId: deliveryId,
+    shopId : restaurantId,
+    shopName: restaurantName,
+    description: restaurantDes,
+    capacity: 99,
+    createdAt: new Date(),
+  })
+
+  await roomSchema.save();
+
+  const roomId = roomSchema._id
+
+  const resDishes = await axios.get(`${baseUrl}/API/getResDishes?&requestId=${deliveryId}`)
+  if (resDishes.data.result == 'success') {
+    console.log(resDishes.data.reply)
+    const menuInfo = resDishes.data.reply.menu_infos
+
+    menuInfo.forEach((menuInfo) => {
+      menuInfo.dishes.forEach((dish) => {
+        const menuSchema = new MenuSchema({
+          room: roomId,
+          title: dish.name,
+          image: dish.photos[1].value,
+          price: priceParser(dish.price.text),
+          description: dish.description,
+        })
+        menuSchema.save();
+      });
+    });
+    
+  }
 
   res.redirect(roomName);
 });
+
+function priceParser(priceStr) {
+  return priceStr.parseInt(str.replace(/[,đ]/g, ""))
+}
 
 // Render room page
 app.get("/:room", async (req, res) => {
@@ -169,18 +226,15 @@ app.get("/:room", async (req, res) => {
     return res.redirect("/");
   }
 
-  const menuInfo = fs.readFileSync(__dirname + "/dataJSON/menu.json");
-  if (menuInfo.length < 3) {
-    return fetchShopeeFood(req, res);
-  }
+  let menuInfo = [];
 
-  const hisOrderJSON = await getHistoryOrder(req.params.room, restaurantName)
+  const hisOrderJSON = await getHistoryOrder(req.params.room, "restaurantName");
 
   // Render for refresh or new connection
   res.render("room", {
     roomName: req.params.room,
-    resName: restaurantName,
-    foods: JSON.parse(menuInfo),
+    resName: "restaurantName",
+    foods: menuInfo,
     orders: hisOrderJSON,
     sumOrders: summaryOrders(hisOrderJSON),
     totalItems: hisOrderJSON.reduce((acc, order) => acc + order.foodQty, 0),
@@ -190,10 +244,12 @@ app.get("/:room", async (req, res) => {
 
 async function getHistoryOrder(roomName, shopName) {
   try {
-    const orderResult = await axios.get(`${baseUrl}/API/getOrder?roomName=${roomName}&shopName=${shopName}`);
+    const orderResult = await axios.get(
+      `${baseUrl}/API/getOrder?roomName=${roomName}&shopName=${shopName}`
+    );
     if (orderResult?.data) {
       console.log(orderResult.data);
-      return orderResult.data.order
+      return orderResult.data.order;
     }
     return orderResult;
   } catch (error) {
@@ -231,34 +287,42 @@ io.on("connection", (socket) => {
 
   // Order API
   socket.on("order", async (orderReq) => {
-    let clientIp = socket.request.connection.remoteAddress.replace("::ffff:", "");
+    let clientIp = socket.request.connection.remoteAddress.replace(
+      "::ffff:",
+      ""
+    );
 
-    console.log(`Order from ${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`);
+    console.log(
+      `Order from ${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`
+    );
 
-    let roomName = orderReq.roomName
-    let shopName = orderReq.shopName
-    let orderUser = orderReq.orderUser
-    let foodTitle = orderReq.foodTitle
-    let foodPrice = priceParser(orderReq.foodPrice)
-    let foodQty = parseInt(orderReq.foodQty)
-    let foodNote = orderReq.foodNote
+    let roomName = orderReq.roomName;
+    let shopName = orderReq.shopName;
+    let orderUser = orderReq.orderUser;
+    let foodTitle = orderReq.foodTitle;
+    let foodPrice = priceParser(orderReq.foodPrice);
+    let foodQty = parseInt(orderReq.foodQty);
+    let foodNote = orderReq.foodNote;
     let ipUser = clientIp;
 
-
     try {
-      // Check if there is an existing order with the same roomName, orderUser, foodTitle 
-      let historyOrder = await OrderHistory.findOne({ roomName, orderUser, foodTitle, ipUser });
+      // Check if there is an existing order with the same roomName, orderUser, foodTitle
+      let historyOrder = await OrderHistory.findOne({
+        roomName,
+        orderUser,
+        foodTitle,
+        ipUser,
+      });
 
       if (historyOrder) {
         // If an existing order is found, update the foodQty, updatedTime
         historyOrder.foodQty += foodQty;
         historyOrder.foodNote = foodNote;
-        historyOrder.updatedTime = new Date()
-        historyOrder.__v += 1
+        historyOrder.updatedTime = new Date();
+        historyOrder.__v += 1;
         await historyOrder.save();
 
         console.log(`Order updated: \n ${JSON.stringify(historyOrder)}`);
-
       } else {
         // If no existing order is found, create a new order
         const newOrder = new OrderHistory({
@@ -271,60 +335,68 @@ io.on("connection", (socket) => {
           foodNote: foodNote,
           ipUser: ipUser,
           createdTime: new Date(),
-          updatedTime: new Date()
-        })
+          updatedTime: new Date(),
+        });
 
         await newOrder.save();
 
         console.log(`New order created: \n ${JSON.stringify(newOrder)}`);
-
       }
     } catch (error) {
-      console.log('Error with creating order:', error);
+      console.log("Error with creating order:", error);
     }
-  })
+  });
 
   // Delete API
   socket.on("delete", async (deletedReq) => {
-    let clientIp = socket.request.connection.remoteAddress.replace("::ffff:", "");
+    let clientIp = socket.request.connection.remoteAddress.replace(
+      "::ffff:",
+      ""
+    );
 
-    let roomName = deletedReq.roomName
-    let shopName = deletedReq.shopName
-    let deletedUser = deletedReq.deleteUser
+    let roomName = deletedReq.roomName;
+    let shopName = deletedReq.shopName;
+    let deletedUser = deletedReq.deleteUser;
 
-    console.log(`Delete order from ${deletedUser}@${clientIp} to ${roomName}@${shopName}`);
+    console.log(
+      `Delete order from ${deletedUser}@${clientIp} to ${roomName}@${shopName}`
+    );
 
     let historyOrder = await OrderHistory.findOne({ _id: deletedReq.orderId });
 
-    if (!historyOrder
-      || historyOrder.roomName != roomName
-      || historyOrder.shopName != shopName
-      || historyOrder.orderUser != deletedUser
-      || historyOrder.ipUser != clientIp) {
-      console.log(`User ${deletedUser}@${clientIp} permission denied: \nOrderId`, deletedReq.orderId);
-      let deleteResult = {}
-      deleteResult.status = PERMISSION_DENIED
-      deleteResult.order = historyOrder
+    if (
+      !historyOrder ||
+      historyOrder.roomName != roomName ||
+      historyOrder.shopName != shopName ||
+      historyOrder.orderUser != deletedUser ||
+      historyOrder.ipUser != clientIp
+    ) {
+      console.log(
+        `User ${deletedUser}@${clientIp} permission denied: \nOrderId`,
+        deletedReq.orderId
+      );
+      let deleteResult = {};
+      deleteResult.status = PERMISSION_DENIED;
+      deleteResult.order = historyOrder;
       return io.emit("delete-order", deleteResult);
     }
-    const deletedOrder = await OrderHistory.findOneAndDelete({ _id: deletedReq.orderId });
+    const deletedOrder = await OrderHistory.findOneAndDelete({
+      _id: deletedReq.orderId,
+    });
     if (!deletedOrder) {
       console.log(`Error with deleting order: \n`, deletedOrder);
-      return
+      return;
       // let deleteResult = {}
       // deleteResult.status = PERMISSION_DENIED
       // deleteResult.order = historyOrder
       // return io.emit("delete-order", deleteResult);
-    }      
-    let deleteResult = {}
-    deleteResult.status = SUCCESS
-    deleteResult.order = historyOrder
+    }
+    let deleteResult = {};
+    deleteResult.status = SUCCESS;
+    deleteResult.order = historyOrder;
     return io.emit("delete-order", deleteResult);
-
-  })
-
+  });
 });
-
 
 // String price to int
 function priceParser(strPrice) {
@@ -369,13 +441,13 @@ async function fetchShopeeFood(req, res) {
 
 // Get Restaurant ID
 async function getResId(req, res) {
-  import("node-fetch")
+  await import("node-fetch")
     .then((module) => {
       const fetch = module.default;
 
       fetch(
         "https://gappapi.deliverynow.vn/api/delivery/get_from_url?url=" +
-        shopUrl.replace("https://shopeefood.vn/", ""),
+          shopUrl.replace("https://shopeefood.vn/", ""),
         {
           method: "GET",
           headers: {
@@ -414,7 +486,7 @@ async function getResId(req, res) {
 async function getRestaurantName(deliveryInfo, req, res) {
   let API = `https://gappapi.deliverynow.vn/api/delivery/get_detail?id_type=2&request_id=${deliveryInfo.reply.delivery_id}`;
 
-  import("node-fetch")
+  await import("node-fetch")
     .then((module) => {
       const fetch = module.default;
 
@@ -456,7 +528,7 @@ async function getRestaurantName(deliveryInfo, req, res) {
 async function getDeliveryDishes(deliveryInfo, req, res) {
   let urlAPI = `https://gappapi.deliverynow.vn/api/dish/get_delivery_dishes?id_type=2&request_id=${deliveryInfo.reply.delivery_id}`;
 
-  import("node-fetch")
+  await import("node-fetch")
     .then((module) => {
       const fetch = module.default;
 
@@ -520,20 +592,38 @@ function getMenuJson(json, req, res) {
  * Saving menu list to file
  */
 async function saveMenuJson(menuJson, req, res) {
-  fs.writeFile(
-    __dirname + "/dataJSON/menu.json",
-    JSON.stringify(menuJson),
-    "utf8",
-    function (err) {
-      if (err) {
-        logWriter(DEBUG, "An error occured while writing JSON Object to File.");
-        return logWriter(err);
-      }
-      logWriter(DEBUG, "Saving menu JSON complete...");
-    }
-  );
+  // fs.writeFile(
+  //   __dirname + "/dataJSON/menu.json",
+  //   JSON.stringify(menuJson),
+  //   "utf8",
+  //   function (err) {
+  //     if (err) {
+  //       logWriter(DEBUG, "An error occured while writing JSON Object to File.");
+  //       return logWriter(err);
+  //     }
+  //     logWriter(DEBUG, "Saving menu JSON complete...");
+  //   }
+  // );
 
-  const historyOrderJson = await getHistoryOrder(req.params.room, restaurantName)
+  // If no existing order is found, create a new order
+  for (let i = 0; i < menuJson.length; i++) {
+    const menu = new MenuSchema({
+      title: menuJson[i].title,
+      image: menuJson[i].image,
+      price: menuJson[i].price,
+      description: menuJson[i].des,
+      room: rooms._id,
+    });
+
+    await menu.save();
+  }
+
+  console.log(`Menu saved: \n ${JSON.stringify(menuJson)}`);
+
+  const historyOrderJson = await getHistoryOrder(
+    req.params.room,
+    restaurantName
+  );
 
   res.render("room", {
     roomName: req.params.room,
@@ -543,48 +633,49 @@ async function saveMenuJson(menuJson, req, res) {
     sumOrders: summaryOrders(historyOrderJson),
     totalItems: historyOrderJson.reduce((acc, item) => acc + item.foodQty, 0),
     totalPrice: calTotalPrice(historyOrderJson),
-  }
-  );
+  });
 }
 
 function summaryOrders(ordersJson) {
-
   const summary = ordersJson.reduce((acc, curr) => {
-    const existing = acc.find(item => item.foodTitle === curr.foodTitle);
-    
+    const existing = acc.find((item) => item.foodTitle === curr.foodTitle);
+
     if (existing) {
       existing.foodQty += curr.foodQty;
       existing.totalPrice += curr.foodPrice;
       existing.foodNote.push({
         userName: curr.orderUser,
-        note: curr.foodNote
+        note: curr.foodNote,
       });
     } else {
       acc.push({
         foodTitle: curr.foodTitle,
-        foodNote: [{
-          userName: curr.orderUser,
-          note: curr.foodNote
-        }],
+        foodNote: [
+          {
+            userName: curr.orderUser,
+            note: curr.foodNote,
+          },
+        ],
         foodQty: curr.foodQty,
-        totalPrice: curr.foodPrice
+        totalPrice: curr.foodPrice,
       });
     }
-    
+
     return acc;
   }, []);
-  
+
   return summary;
 }
 
 function calTotalPrice(ordersJson) {
   let totalPrice = 0;
   for (let i = 0; i < ordersJson.length; i++) {
-    totalPrice += parseInt(ordersJson[i].foodPrice)*parseInt(ordersJson[i].foodQty);
+    totalPrice +=
+      parseInt(ordersJson[i].foodPrice) * parseInt(ordersJson[i].foodQty);
   }
   return formatPrice(totalPrice);
 }
 
 function formatPrice(value) {
-  return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+  return value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
 }

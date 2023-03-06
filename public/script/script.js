@@ -15,11 +15,9 @@ const ERROR = "400";
 const SUCCESS = "200";
 const PERMISSION_DENIED = "500";
 
-
 var orderDetail = "";
 var orderJson;
 var cookieUserName = getCookie("userName");
-
 
 socket.on("room-created", (room) => {
   const roomElement = document.createElement("div");
@@ -29,7 +27,6 @@ socket.on("room-created", (room) => {
   roomContainer.append(roomElement);
   roomContainer.append(roomLink);
 });
-
 
 // Delete Order
 function confirmDelete(event) {
@@ -131,11 +128,7 @@ socket.on("delete-order", async (deleteResult) => {
 
     case PERMISSION_DENIED:
       // notify delete status
-      notify(
-        TOASTR_ERROR,
-        `Delete Failed`,
-        `Permission Denied`
-      );
+      notify(TOASTR_ERROR, `Delete Failed`, `Permission Denied`);
 
     default:
       // notify(TOASTR_ERROR, "Delete Failed", "Something went wrong");
@@ -160,35 +153,49 @@ async function updateSummary() {
       console.log(err);
     });
 
-    function appendSummary(data) {
-      while (summaryContainer.firstChild) {
-        summaryContainer.removeChild(summaryContainer.firstChild);
+  function appendSummary(data) {
+    while (summaryContainer.firstChild) {
+      summaryContainer.removeChild(summaryContainer.firstChild);
+    }
+    let totalItems = 0;
+    let totalPrice = 0;
+    let historyOrder = data.order;
+
+    const summary = {};
+    let foodNotes = [];
+
+    historyOrder.forEach((item) => {
+      if (summary[item.foodTitle]) {
+        summary[item.foodTitle].totalPrice += parseInt(item.foodPrice);
+        summary[item.foodTitle].foodQty += parseInt(item.foodQty);
+
+        let note = new Object();
+        note.username = item.orderUser;
+        note.note = item.foodNote;
+        foodNotes.push(note);
+
+        summary[item.foodTitle].foodNote = foodNotes;
+      } else {
+        let note = new Object();
+        note.userName = item.orderUser;
+        note.note = item.foodNote;
+        foodNotes.push(note);
+
+        summary[item.foodTitle] = {
+          foodTitle: item.foodTitle,
+          foodQty: parseInt(item.foodQty),
+          totalPrice: parseInt(item.foodPrice),
+          foodNote: foodNotes,
+        };
       }
-      let totalItems = 0;
-      let totalPrice = 0;
-      let historyOrder = data.order
+    });
 
-      const summary = {};
-    
-      historyOrder.forEach(item => {
-        if (summary[item.foodTitle]) {
-          summary[item.foodTitle].totalPrice += parseInt(item.foodPrice);
-          summary[item.foodTitle].foodQty += parseInt(item.foodQty);
-        } else {
-          summary[item.foodTitle] = {
-            foodTitle: item.foodTitle,
-            foodQty: parseInt(item.foodQty),
-            totalPrice: parseInt(item.foodPrice)
-          };
-        }
-      });
+    let summaryOrders = Object.values(summary);
 
-      let summaryOrders = Object.values(summary);
-
-      summaryOrders.forEach((order) => {
-        const el = document.createElement("div");
-        el.classList.add("summary-detail");
-        el.innerHTML = `
+    summaryOrders.forEach((order) => {
+      const el = document.createElement("div");
+      el.classList.add("summary-detail");
+      el.innerHTML = `
             <div class="summary-info">
                 <span class="sum-qty-txt">${order.foodQty}</span>
                 <span class="sum-food-txt">${order.foodTitle}</span>
@@ -197,17 +204,17 @@ async function updateSummary() {
                 <span>${order.totalPrice}đ</span>
             </div>
           `;
-        summaryContainer.appendChild(el);
-        totalItems += order.foodQty;
-        totalPrice += order.totalPrice;
-      });
+      summaryContainer.appendChild(el);
+      totalItems += order.foodQty;
+      totalPrice += order.totalPrice;
+    });
 
-      const subTotalEl = document.getElementById("sub-total-txt");
-      subTotalEl.innerHTML = `Subtotal (${totalItems} items)`
-    
-      const totalPriceEl = document.getElementById("total-price-txt");
-      totalPriceEl.innerHTML = `${totalPrice}đ`;
-    }
+    const subTotalEl = document.getElementById("sub-total-txt");
+    subTotalEl.innerHTML = `Subtotal (${totalItems} items)`;
+
+    const totalPriceEl = document.getElementById("total-price-txt");
+    totalPriceEl.innerHTML = `${totalPrice}đ`;
+  }
 }
 
 function appendNewOrder(newOrder) {
@@ -216,6 +223,11 @@ function appendNewOrder(newOrder) {
   el.setAttribute("onclick", "confirmDelete(this)");
   el.setAttribute("data-room", newOrder.roomName);
   el.setAttribute("data-shop", newOrder.shopName);
+
+  let spanFoodNote = ``;
+  if (newOrder.foodNote) {
+    spanFoodNote = `${newOrder.foodNote}`;
+  }
 
   el.innerHTML = `
             <div class="order-detail">
@@ -235,19 +247,23 @@ function appendNewOrder(newOrder) {
                   <span class="price-txt">Price: ${newOrder.foodPrice}</span>
                 </div>
                 <div id="order-info order-info-note">
-                  <span class="note-txt">Note: ${newOrder.foodNote}</span>
+                  <span class="note-txt">${spanFoodNote}</span>
                 </div>
               </div>
             </div>
         `;
-  console.log("🚀 ~ file: script.js:242 ~ appendNewOrder ~ el:", el)
+  console.log("🚀 ~ file: script.js:242 ~ appendNewOrder ~ el:", el);
   orderContainer.appendChild(el);
 }
 
 function appendUpdatedOrder(updatedOrder) {
   const orderEl = document.getElementById(updatedOrder._id);
-  orderEl.querySelector(".food-amount-txt").innerHTML = `${updatedOrder.foodQty}`;
-  orderEl.querySelector(".note-txt").innerHTML = `Note: ${updatedOrder.foodNote}`;
+  orderEl.querySelector(
+    ".food-amount-txt"
+  ).innerHTML = `${updatedOrder.foodQty}`;
+  orderEl.querySelector(
+    ".note-txt"
+  ).innerHTML = `Note: ${updatedOrder.foodNote}`;
 }
 
 // Popup confirm order
@@ -273,18 +289,17 @@ function closePopupConfirmOrder() {
   document.getElementById("popup-confirm").style.display = "none";
 }
 
-
 // Display popup define username
 if (cookieUserName == null || cookieUserName.length < 1) {
-  document.getElementById("popup-username").classList.add('open');
+  document.getElementById("popup-username").classList.add("open");
 } else {
-  document.getElementById("popup-username").classList.remove('open');
+  document.getElementById("popup-username").classList.remove("open");
   socket.emit("old-user", roomName, cookieUserName);
 }
 
 function confirmUserName() {
   userName = txtuserName.value;
-  document.getElementById("popup-username").classList.remove('open');
+  document.getElementById("popup-username").classList.remove("open");
   setCookie("userName", userName, 1);
   // appendLog('You joined')
   socket.emit("new-user", roomName, userName);
@@ -379,7 +394,7 @@ function clickItem(item, index) {
 
 menuItems.forEach((item, index) => {
   item.addEventListener("click", () => clickItem(item, index));
-})
+});
 
 window.addEventListener("resize", () => {
   // offsetMenuBorder(activeItem, menuBorder);
@@ -387,5 +402,5 @@ window.addEventListener("resize", () => {
 });
 window.addEventListener("load", () => {
   body.style.backgroundColor = bgColorsBody[0];
-  body.style.backdropFilter = "brightness(90%)"
+  body.style.backdropFilter = "brightness(90%)";
 });

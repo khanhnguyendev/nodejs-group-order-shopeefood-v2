@@ -128,9 +128,11 @@
                                       <div class="order-info order-infor-price">
                                         <span class="price-txt">Price: <%=orderDetail.foodPrice %></span>
                                       </div>
+                                      <% if (orderDetail.foodNote) { %>
                                       <div id="order-info order-info-note">
-                                        <span class="note-txt">Note: <%= orderDetail.foodNote %></span>
+                                        <span class="note-txt"><%= orderDetail.foodNote %></span> 
                                       </div>
+                                      <% } %>
                                     </div>
                                   </div>
                                 </li>
@@ -148,6 +150,9 @@
                                 <div class="summary-info">
                                   <span class="sum-qty-txt"><%= orderDetail.foodQty %></span>
                                   <span class="sum-food-txt"><%= orderDetail.foodTitle %></span>
+                                  <% orderDetail.foodNote.forEach((note) => { %>
+                                    User<%= note.userName %> : note=<%= note.note %>
+                                  <% }) %>
                                 </div>
                                 <div class="sum-total-txt">
                                   <span><%= orderDetail.totalPrice %>đ</span>

@@ -252,6 +252,7 @@ io.on("connection", (socket) => {
       if (historyOrder) {
         // If an existing order is found, update the foodQty, updatedTime
         historyOrder.foodQty += foodQty;
+        historyOrder.foodNote = foodNote;
         historyOrder.updatedTime = new Date()
         historyOrder.__v += 1
         await historyOrder.save();
@@ -548,16 +549,30 @@ async function saveMenuJson(menuJson, req, res) {
 
 function summaryOrders(ordersJson) {
   const summary = {};
+  let foodNotes = [];
 
   ordersJson.forEach(item => {
     if (summary[item.foodTitle]) {
       summary[item.foodTitle].totalPrice += parseInt(item.foodPrice);
       summary[item.foodTitle].foodQty += parseInt(item.foodQty);
+      
+      let note = new Object();
+      note.username = item.orderUser;
+      note.note = item.foodNote;
+      foodNotes.push(note);
+
+      summary[item.foodTitle].foodNote = foodNotes;
     } else {
+      let note = new Object();
+      note.userName = item.orderUser
+      note.note = item.foodNote;
+      foodNotes.push(note);
+
       summary[item.foodTitle] = {
         foodTitle: item.foodTitle,
         foodQty: parseInt(item.foodQty),
-        totalPrice: parseInt(item.foodPrice)
+        totalPrice: parseInt(item.foodPrice),
+        foodNote: foodNotes,
       };
     }
   });

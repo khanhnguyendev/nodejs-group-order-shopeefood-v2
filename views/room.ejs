@@ -152,12 +152,19 @@
                                 <div class="summary-info">
                                   <span class="sum-qty-txt"><%= orderDetail.foodQty %></span>
                                   <span class="sum-food-txt"><%= orderDetail.foodTitle %></span>
-                                  <% orderDetail.foodNote.forEach((note) => { %>
-                                    <% if (note.note) { %>
-                                    User <%= note.userName %> : <%= note.note %>
-                                    <% } %>
-                                  </br>
-                                  <% }) %>
+                                  <button class="btn btn-primary expand-button" type="button" data-bs-toggle="collapse" data-bs-target="#user1" aria-expanded="false" aria-controls="user1">+</button>
+                                  <div class="row expand-content">
+                                    <div class="collapse multi-collapse" id="user1">
+                                      <div class="sum-user-note">
+                                        <% orderDetail.foodNote.forEach((note) => { %>
+                                          <% if (note.note) { %>
+                                          <p><%= note.userName %> : <%= note.note %></p>
+                                          <p><%= note.userName %> : <%= note.note %></p>
+                                          <% } %>
+                                        <% }) %>
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
                                 <div class="sum-total-txt">
                                   <span><%= orderDetail.totalPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></span>
@@ -179,9 +186,9 @@
                       </div>
                     </div>
                     <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
-                        <div class="comming-soon">
+                        <div class="coming-soon">
                           <img class="card-img-top" src="https://tiengdong.com/wp-content/uploads/www_tiengdong_com-meme-gau-truc-panda-weibo.jpg" alt="Card image cap">
-                          <h2>Comming Soon</h2>
+                          <h2>Coming Soon</h2>
                         </div>
                     </div>
                   </div>

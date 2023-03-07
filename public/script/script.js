@@ -169,14 +169,16 @@ async function updateSummary() {
         existing.totalPrice += curr.foodPrice;
         existing.foodNote.push({
           userName: curr.orderUser,
-          note: curr.foodNote
+          note: curr.foodNote,
+          id: curr._id
         });
       } else {
         acc.push({
           foodTitle: curr.foodTitle,
           foodNote: [{
             userName: curr.orderUser,
-            note: curr.foodNote
+            note: curr.foodNote,
+            id: curr._id
           }],
           foodQty: curr.foodQty,
           totalPrice: curr.foodPrice
@@ -186,18 +188,36 @@ async function updateSummary() {
       return acc;
     }, []);
 
-    summaryOrders.forEach((order) => {
+    summaryOrders.forEach((order,index) => {
       const el = document.createElement("div");
       el.classList.add("summary-detail");
-      el.innerHTML = `
+      let content='';
+      content = `
             <div class="summary-info">
                 <span class="sum-qty-txt">${order.foodQty}</span>
-                <span class="sum-food-txt">${order.foodTitle}</span>
+                <span class="sum-food-txt">${order.foodTitle}</span>`;
+      if(order.foodNote.length != 0) {
+        order.foodNote.forEach((note,noteIndex) => {
+          if(noteIndex == 0) {
+            content += `
+              <button class="btn btn-primary expand-button" type="button" data-bs-toggle="collapse" data-bs-target="#sum-${index}" aria-expanded="false" aria-controls="sum-${index}">+</button>
+              <div class="row expand-content">
+                <div class="collapse multi-collapse" id="sum-${index}">
+                  <div class="sum-user-note">`
+          }
+          content += `<p id="${note.id}">${note.userName} : ${note.note} </p>`;
+        })
+        content += `
+              </div>
             </div>
-            <div class="sum-total-txt">
-                <span>${formatPrice(order.totalPrice)}</span>
-            </div>
-          `;
+          </div>
+        </div>
+        <div class="sum-total-txt">
+          <span>${formatPrice(order.totalPrice)}</span>
+        </div>
+        `;
+      }
+      el.innerHTML = content;
       summaryContainer.appendChild(el);
       totalItems += order.foodQty;
       totalPrice += order.totalPrice;
@@ -221,7 +241,7 @@ function appendNewOrder(newOrder) {
   let divFoodNote = ``;
   if (newOrder.foodNote) {
     divFoodNote = `
-      <div id="order-info order-info-note">
+      <div id="order-info-note">
         <span class="note-txt">${newOrder.foodNote}</span>
       </div>`;
   }
@@ -247,7 +267,6 @@ function appendNewOrder(newOrder) {
               </div>
             </div>
         `;
-  console.log("🚀 ~ file: script.js:242 ~ appendNewOrder ~ el:", el);
   orderContainer.appendChild(el);
 }
 

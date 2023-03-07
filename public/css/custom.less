@@ -73,7 +73,7 @@ body {
     width: 100%;
 }
 
-.comming-soon {
+.coming-soon {
     color: @main-color;
     text-align: center;
 }
@@ -280,11 +280,24 @@ ol .order-detail {
     }
 
     &-info {
-        display: flex;
+        display: grid;
+        grid-template-columns: 10px 1fr;
         margin-left: 10px;
         width: 100%;
         max-width: 80%;
         align-items: center;
+        .expand-button {
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            line-height: 1;
+            padding: 0;
+            grid-row: 2;
+          }
+        .expand-content {
+            grid-row: 3;
+            grid-column: 1 / span 2;
+        }
     }
 
     &-right {
@@ -595,10 +608,8 @@ ol .order-detail {
 }
 
 .title-wrapper {
-    height: 30px;
     overflow: hidden;
     white-space: nowrap;
-
     #txtShopName {
         font-size: 30px;
         position: relative;

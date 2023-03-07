@@ -36,7 +36,7 @@
         font-size: 15px;
     }
 }
-@media screen and (max-width: @screen-md-min) {
+@media screen and (max-width: @screen-sm-max) {
     .summary {
         &-container {
             flex-direction: column;
@@ -45,7 +45,24 @@
             border-bottom: 1px solid #fff;
         }
     }
-   
+    .summary-left,
+    .summary-right {
+        overflow: hidden;
+        &--wrapper {
+            height: 100%;
+        }
+    }
+    .summary-left {
+        &--wrapper {
+            padding: 0 10px 35px;
+            overflow: hidden;
+            height: calc(100% - 20px);
+        }
+    }
+    .orders-list {
+        overflow-y: auto;
+        height: 100%;
+    }
 }
 @media screen and (min-width: @screen-md-min) {
     .summary-left,
@@ -80,7 +97,7 @@
 @media screen and (min-width: @screen-sm-min) and(max-width: @screen-sm-max) {
     .tab-pane {
         .card {
-            width: calc(33% - 20px);
+            width: calc(33.33% - 20px);
         }
     }
     .menu {
@@ -103,9 +120,18 @@
         }
     }
     .summary-left {
-        overflow-y: auto;
+        // overflow-y: auto;
         &::-webkit-scrollbar {
             width: 5px;
+        }
+        &--wrapper {
+            height: 100%;
+            overflow: hidden;
+            padding-bottom: 35px;
+            .orders-list {
+                overflow-y: auto;
+                height: 100%;
+            }
         }
     }
 }

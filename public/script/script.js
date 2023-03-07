@@ -15,11 +15,9 @@ const ERROR = "400";
 const SUCCESS = "200";
 const PERMISSION_DENIED = "500";
 
-
 var orderDetail = "";
 var orderJson;
 var cookieUserName = getCookie("userName");
-
 
 socket.on("room-created", (room) => {
   const roomElement = document.createElement("div");
@@ -30,14 +28,13 @@ socket.on("room-created", (room) => {
   roomContainer.append(roomLink);
 });
 
-
 // Delete Order
 function confirmDelete(event) {
   let deletedOrder = {
     orderId: event.getAttribute("id"),
-    roomName: event.getAttribute("data-room"),
-    shopName: event.getAttribute("data-shop"),
     deleteUser: getCookie("userName"),
+    roomId: event.getAttribute("data-room-id"),
+    deliveryId: event.getAttribute("data-delivery-id"),
   };
   socket.emit("delete", deletedOrder);
 }
@@ -131,11 +128,7 @@ socket.on("delete-order", async (deleteResult) => {
 
     case PERMISSION_DENIED:
       // notify delete status
-      notify(
-        TOASTR_ERROR,
-        `Delete Failed`,
-        `Permission Denied`
-      );
+      notify(TOASTR_ERROR, `Delete Failed`, `Permission Denied`);
 
     default:
       // notify(TOASTR_ERROR, "Delete Failed", "Something went wrong");
@@ -144,7 +137,7 @@ socket.on("delete-order", async (deleteResult) => {
 });
 
 async function updateSummary() {
-  await fetch(`/API/getOrder?roomName=${roomName}`, {})
+  await fetch(`/API/getOrder?roomId=${roomId}&requestId=${deliveryId}`, {})
     .then((response) => {
       if (!response.ok) {
         throw new Error("Network response was not OK");
@@ -160,81 +153,114 @@ async function updateSummary() {
       console.log(err);
     });
 
-    function appendSummary(data) {
-      while (summaryContainer.firstChild) {
-        summaryContainer.removeChild(summaryContainer.firstChild);
+  function appendSummary(data) {
+    while (summaryContainer.firstChild) {
+      summaryContainer.removeChild(summaryContainer.firstChild);
+    }
+    let totalItems = 0;
+    let totalPrice = 0;
+    let orders = data.reply;
+
+    const summaryOrders = orders.reduce((acc, curr) => {
+      const existing = acc.find(item => item.foodTitle === curr.foodTitle);
+      
+      if (existing) {
+        existing.foodQty += curr.foodQty;
+        existing.totalPrice += curr.foodPrice;
+        existing.foodNote.push({
+          userName: curr.orderUser,
+          note: curr.foodNote
+        });
+      } else {
+        acc.push({
+          foodTitle: curr.foodTitle,
+          foodNote: [{
+            userName: curr.orderUser,
+            note: curr.foodNote
+          }],
+          foodQty: curr.foodQty,
+          totalPrice: curr.foodPrice
+        });
       }
-      let totalItems = 0;
-      let totalPrice = 0;
-      let historyOrder = data.order
+      
+      return acc;
+    }, []);
 
-      const summary = {};
-    
-      historyOrder.forEach(item => {
-        if (summary[item.foodTitle]) {
-          summary[item.foodTitle].totalPrice += parseInt(item.foodPrice);
-          summary[item.foodTitle].foodQty += parseInt(item.foodQty);
-        } else {
-          summary[item.foodTitle] = {
-            foodTitle: item.foodTitle,
-            foodQty: parseInt(item.foodQty),
-            totalPrice: parseInt(item.foodPrice)
-          };
-        }
-      });
-
-      let summaryOrders = Object.values(summary);
-
-      summaryOrders.forEach((order) => {
-        const el = document.createElement("div");
-        el.classList.add("summary-detail");
-        el.innerHTML = `
+    summaryOrders.forEach((order) => {
+      const el = document.createElement("div");
+      el.classList.add("summary-detail");
+      el.innerHTML = `
             <div class="summary-info">
                 <span class="sum-qty-txt">${order.foodQty}</span>
                 <span class="sum-food-txt">${order.foodTitle}</span>
             </div>
             <div class="sum-total-txt">
-                <span>${order.totalPrice}đ</span>
+                <span>${formatPrice(order.totalPrice)}</span>
             </div>
           `;
-        summaryContainer.appendChild(el);
-        totalItems += order.foodQty;
-        totalPrice += order.totalPrice;
-      });
+      summaryContainer.appendChild(el);
+      totalItems += order.foodQty;
+      totalPrice += order.totalPrice;
+    });
 
-      const subTotalEl = document.getElementById("sub-total-txt");
-      subTotalEl.innerHTML = `Subtotal (${totalItems} items)`
-    
-      const totalPriceEl = document.getElementById("total-price-txt");
-      totalPriceEl.innerHTML = `${totalPrice}đ`;
-    }
+    const subTotalEl = document.getElementById("sub-total-txt");
+    subTotalEl.innerHTML = `Subtotal (${totalItems} items)`;
+
+    const totalPriceEl = document.getElementById("total-price-txt");
+    totalPriceEl.innerHTML = `${formatPrice(totalPrice)}`;
+  }
 }
 
 function appendNewOrder(newOrder) {
   const el = document.createElement("li");
   el.id = newOrder._id;
   el.setAttribute("onclick", "confirmDelete(this)");
-  el.setAttribute("data-room", newOrder.roomName);
-  el.setAttribute("data-shop", newOrder.shopName);
+  el.setAttribute("data-room-id", newOrder.roomId);
+  el.setAttribute("data-delivery-id", newOrder.deliveryId);
+
+  let divFoodNote = ``;
+  if (newOrder.foodNote) {
+    divFoodNote = `
+      <div id="order-info order-info-note">
+        <span class="note-txt">${newOrder.foodNote}</span>
+      </div>`;
+  }
 
   el.innerHTML = `
-            <span class="order-detail">
-                <img class="user-avatar" alt="User Avatar" src="https://haycafe.vn/wp-content/uploads/2022/03/hinh-meo-hai-huoc.jpg">
-                <div class="order-text">
-                  <div id="order-info-1"><label id="user-txt">${newOrder.orderUser} </label><label id="order-time-txt">${newOrder.createdTime}</label></div>
-                  <div id="order-info-2"><label id="food-amount-txt">${newOrder.foodQty} x </label>${newOrder.foodTitle} x ${newOrder.foodPrice}</div>
-                  <div id="order-info-2"><label id="note-txt">Note: ${newOrder.foodNote}</label></div>
+            <div class="order-detail">
+              <img class="user-avatar" alt="User Avatar"
+                src="https://haycafe.vn/wp-content/uploads/2022/03/hinh-meo-hai-huoc.jpg">
+              <div class="order-text">
+                <div class="order-info order-info-name">
+                  <span class="user-txt">${newOrder.orderUser}</span>
+                  <span class="order-time-txt">${newOrder.createdTime}</span>
                 </div>
-            </span>
+                <div class="order-info order-info-title">
+                  <span class="food-amount-txt">${newOrder.foodQty}</span>
+                  <span> x </span>
+                  <span class="order-title-txt">${newOrder.foodTitle}</span>
+                </div>
+                <div class="order-info order-infor-price">
+                  <span class="price-txt">Price: ${formatPrice(newOrder.foodPrice)}</span>
+                </div>
+                ${divFoodNote}
+              </div>
+            </div>
         `;
+  console.log("🚀 ~ file: script.js:242 ~ appendNewOrder ~ el:", el);
   orderContainer.appendChild(el);
 }
 
 function appendUpdatedOrder(updatedOrder) {
-
   const orderEl = document.getElementById(updatedOrder._id);
-  orderEl.querySelector("#food-amount-txt").innerHTML = `${updatedOrder.foodQty} x `;
-  orderEl.querySelector("#note-txt").innerHTML = `Note: ${updatedOrder.foodNote}`;
+  orderEl.querySelector(
+    ".food-amount-txt"
+  ).innerHTML = `${updatedOrder.foodQty}`;
+  if (updatedOrder.foodNote) {
+    orderEl.querySelector(
+      ".note-txt"
+    ).innerHTML = `${updatedOrder.foodNote}`;
+  }
 }
 
 // Popup confirm order
@@ -260,18 +286,17 @@ function closePopupConfirmOrder() {
   document.getElementById("popup-confirm").style.display = "none";
 }
 
-
 // Display popup define username
 if (cookieUserName == null || cookieUserName.length < 1) {
-  document.getElementById("popup-username").classList.add('open');
+  document.getElementById("popup-username").classList.add("open");
 } else {
-  document.getElementById("popup-username").classList.remove('open');
+  document.getElementById("popup-username").classList.remove("open");
   socket.emit("old-user", roomName, cookieUserName);
 }
 
 function confirmUserName() {
   userName = txtuserName.value;
-  document.getElementById("popup-username").classList.remove('open');
+  document.getElementById("popup-username").classList.remove("open");
   setCookie("userName", userName, 1);
   // appendLog('You joined')
   socket.emit("new-user", roomName, userName);
@@ -338,7 +363,7 @@ function getCurrentTime() {
 }
 
 const body = document.body;
-const bgColorsBody = ["#ffb457", "#ff96bd", "#9999fb", "#ffe797", "#cffff1"];
+const bgColorsBody = ["#fce38ac4", "#F38181", "#9999fb", "#ffe797", "#cffff1"];
 const menu = body.querySelector(".menu");
 const menuItems = menu.querySelectorAll(".menu__item");
 // const menuBorder = menu.querySelector(".menu__border");
@@ -366,7 +391,11 @@ function clickItem(item, index) {
 
 menuItems.forEach((item, index) => {
   item.addEventListener("click", () => clickItem(item, index));
-})
+});
+
+function formatPrice(value) {
+  return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
+}
 
 window.addEventListener("resize", () => {
   // offsetMenuBorder(activeItem, menuBorder);
@@ -374,5 +403,5 @@ window.addEventListener("resize", () => {
 });
 window.addEventListener("load", () => {
   body.style.backgroundColor = bgColorsBody[0];
-  body.style.backdropFilter = "brightness(90%)"
+  body.style.backdropFilter = "brightness(90%)";
 });

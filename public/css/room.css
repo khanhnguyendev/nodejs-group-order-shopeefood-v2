@@ -303,7 +303,7 @@ body::before {
   color: aqua;
 }
 
-#user-txt {
+.user-txt {
   font-size: 18px;
   font-weight: 900;
   text-transform: uppercase;
@@ -311,27 +311,12 @@ body::before {
   text-shadow: none;
 }
 
-#user-txt:hover {
+.user-txt:hover {
   cursor: pointer;
 }
 
-#order-time-txt {
-  font-size: 12px;
-  color: gray;
-  margin-left: 5px;
-}
-
-#order-time-txt:hover {
+.food-amount-txt:hover {
   cursor: pointer;
-}
-
-#food-amount-txt:hover {
-  cursor: pointer;
-}
-
-#order-title-txt {
-  max-width: 200px;
-  word-wrap: break-word;
 }
 
 #order-info-1 {

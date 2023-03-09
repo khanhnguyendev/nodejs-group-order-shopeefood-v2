@@ -314,11 +314,15 @@ if (cookieUserName == null || cookieUserName.length < 1) {
 }
 
 function confirmUserName() {
-  userName = txtuserName.value;
-  document.getElementById("popup-username").classList.remove("open");
-  setCookie("userName", userName, 1);
-  // appendLog('You joined')
-  socket.emit("new-user", roomName, userName);
+  if(txtuserName.validity.valid) {
+    userName = txtuserName.value;
+    document.getElementById("popup-username").classList.remove("open");
+    setCookie("userName", userName, 1);
+    // appendLog('You joined')
+    socket.emit("new-user", roomName, userName);
+  }else {
+    alert('Nhập tên dôôôôô')
+  }
 }
 
 function setCookie(name, value, days) {
@@ -424,3 +428,4 @@ window.addEventListener("load", () => {
   body.style.backgroundColor = bgColorsBody[0];
   body.style.backdropFilter = "brightness(90%)";
 });
+

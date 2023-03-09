@@ -198,9 +198,33 @@
         <!-- POPUP Define User Name -->
         <div class="popup" id="popup-username">
           <div class="popup-username--wrapper">
-            <h2>What should i call you?</h2>
-            <input id="userName" type="text" placeholder="Your Name" required>
-            <a id="confirmBtn" onclick="confirmUserName()">Yes, please!</a>
+            <!-- <h2>What should i call you?</h2> -->
+            <!-- <input id="userName" type="text" placeholder="Your Name" required> -->
+            <!-- <a id="confirmBtn" onclick="confirmUserName()">Yes, please!</a> -->
+            <div class="group-input-name">      
+              <input id="userName" class="input-name-user" type="text" required>
+              <span class="highlight"></span>
+              <span class="bar"></span>
+              <label class="input-name-txt">Your Name</label>
+            </div>
+            <div class="btn-input-name-container">
+              <a id="confirmBtn" onclick="confirmUserName()" class="button-ani button--piyo">
+                <div class="button__wrapper">
+                    <span class="button__text">Yes, please!</span>
+                </div>
+                <div class="characterBox">
+                    <div class="character wakeup">
+                        <div class="character__face"></div>
+                    </div>
+                    <div class="character wakeup">
+                        <div class="character__face"></div>
+                    </div>
+                    <div class="character">
+                        <div class="character__face"></div>
+                    </div>
+                </div>
+              </a>
+            </div>
           </div>
         </div>
     </div>

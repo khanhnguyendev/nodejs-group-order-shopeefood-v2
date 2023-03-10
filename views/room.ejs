@@ -146,19 +146,31 @@
                           <div class="summary-right--wrapper">
                             <h2 class="order-title">Summary Order</h2>
                             <div class="summary-order-container" id="display-summary">
-
-                              <% sumOrders.forEach((orderDetail)=> { %>
+                              
+                              <% sumOrders.forEach((orderDetail, index)=> { %>
                               <div class="summary-detail">
                                 <div class="summary-info">
                                   <span class="sum-qty-txt"><%= orderDetail.foodQty %></span>
                                   <span class="sum-food-txt"><%= orderDetail.foodTitle %></span>
-                                  <button class="btn btn-primary expand-button" type="button" data-bs-toggle="collapse" data-bs-target="#user1" aria-expanded="false" aria-controls="user1">+</button>
+                                  <button class="btn-primary expand-button" type="button" 
+                                      data-bs-toggle="collapse" 
+                                      data-bs-target="<%= '#sum-'+index %>" 
+                                      aria-expanded="false" 
+                                      aria-controls="<%= 'sum-'+index %>">Note:
+                                      <% orderDetail.foodNote.forEach((note, index) => { %>
+                                        <% if (note.note) { %>
+                                          <% if (index > 0) { %>
+                                            ,
+                                          <% } %>
+                                          <%= note.userName + index %>
+                                        <% } %>
+                                      <% }) %>
+                                  </button>
                                   <div class="row expand-content">
-                                    <div class="collapse multi-collapse" id="user1">
+                                    <div class="collapse multi-collapse" id="<%= 'sum-'+index %>">
                                       <div class="sum-user-note">
                                         <% orderDetail.foodNote.forEach((note) => { %>
                                           <% if (note.note) { %>
-                                          <p><%= note.userName %> : <%= note.note %></p>
                                           <p><%= note.userName %> : <%= note.note %></p>
                                           <% } %>
                                         <% }) %>
@@ -202,7 +214,7 @@
             <!-- <input id="userName" type="text" placeholder="Your Name" required> -->
             <!-- <a id="confirmBtn" onclick="confirmUserName()">Yes, please!</a> -->
             <div class="group-input-name">      
-              <input id="userName" class="input-name-user" type="text" required>
+              <input id="userName" class="input-name-user" title="Nhập tên dôôôôô" type="text" required>
               <span class="highlight"></span>
               <span class="bar"></span>
               <label class="input-name-txt">Your Name</label>
@@ -216,10 +228,10 @@
                     <div class="character wakeup">
                         <div class="character__face"></div>
                     </div>
-                    <div class="character wakeup">
+                    <div class="character ">
                         <div class="character__face"></div>
                     </div>
-                    <div class="character">
+                    <div class="character wakeup">
                         <div class="character__face"></div>
                     </div>
                 </div>

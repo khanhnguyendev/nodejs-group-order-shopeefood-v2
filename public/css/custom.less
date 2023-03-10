@@ -281,18 +281,22 @@ ol .order-detail {
 
     &-info {
         display: grid;
-        grid-template-columns: 10px 1fr;
+        grid-template-columns: 20px 1fr;
         margin-left: 10px;
         width: 100%;
         max-width: 80%;
         align-items: center;
         .expand-button {
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: max-content;
+            background-color: #E9E4E0;
+            color: red;
+            padding: 3px;
+
             line-height: 1;
-            padding: 0;
             grid-row: 2;
+            grid-column: 2;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
           }
         .expand-content {
             grid-row: 3;
@@ -739,6 +743,7 @@ ol .order-detail {
     align-items : flex-end ;
     width : 180px ;
     height : 56px ;
+    pointer-events: none;
 }
 .character{
     position : relative ;
@@ -806,10 +811,15 @@ ol .order-detail {
     margin-bottom: 45px;
     max-width: 255px;
     margin: 0 auto;
+    .error {
+        display: block;
+        margin-top: 10px;
+        color: red;
+    }
 }
 .input-name-user {
     font-size: 18px;
-    padding: 10px 10px 10px 5px;
+    padding: 10px 10px 5px 5px;
     display: block;
     width: 300px;
     border: none;
@@ -823,7 +833,7 @@ ol .order-detail {
     }
     &:focus ~ label, 
     &:valid ~ label {
-        top: -20px;
+        top: -10px;
         font-size: 14px;
         color: @white-color;
     }

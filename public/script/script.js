@@ -61,8 +61,8 @@ function sendOrder() {
     foodQty: document.getElementById("txtFoodQty").value,
     foodNote: document.getElementById("txtNote").value,
   };
-  closePopupConfirmOrder();
   socket.emit("order", orderDetail);
+  closePopupConfirmOrder();
 }
 
 // Listen for new order
@@ -193,30 +193,40 @@ async function updateSummary() {
       el.classList.add("summary-detail");
       let content='';
       content = `
-            <div class="summary-info">
-                <span class="sum-qty-txt">${order.foodQty}</span>
-                <span class="sum-food-txt">${order.foodTitle}</span>`;
+        <div class="summary-info">
+            <span class="sum-qty-txt">${order.foodQty}</span>
+            <span class="sum-food-txt">${order.foodTitle}</span>
+            <button class="btn-primary expand-button" type="button" 
+              data-bs-toggle="collapse" 
+              data-bs-target="#sum-${index}" 
+              aria-expanded="false" 
+              aria-controls="sum-${index}">Note:`;
       if(order.foodNote.length != 0) {
         order.foodNote.forEach((note,noteIndex) => {
-          if(noteIndex == 0) {
-            content += `
-              <button class="btn btn-primary expand-button" type="button" data-bs-toggle="collapse" data-bs-target="#sum-${index}" aria-expanded="false" aria-controls="sum-${index}">+</button>
-              <div class="row expand-content">
-                <div class="collapse multi-collapse" id="sum-${index}">
-                  <div class="sum-user-note">`
+          if(noteIndex > 0) {
+            content += ','
           }
+          content += `${note.userName}`;
+        })
+      }
+      content += `
+            </button>
+            <div class="row expand-content">
+              <div class="collapse multi-collapse" id="sum-${index}">
+                <div class="sum-user-note">`;
+      if(order.foodNote.length != 0) {
+        order.foodNote.forEach((note,noteIndex) => {
           content += `<p id="${note.id}">${note.userName} : ${note.note} </p>`;
         })
-        content += `
-              </div>
+      }
+      content += `
             </div>
           </div>
         </div>
-        <div class="sum-total-txt">
-          <span>${formatPrice(order.totalPrice)}</span>
-        </div>
-        `;
-      }
+      </div>
+      <div class="sum-total-txt">
+        <span>${formatPrice(order.totalPrice)}</span>
+      </div>`;
       el.innerHTML = content;
       summaryContainer.appendChild(el);
       totalItems += order.foodQty;
@@ -299,6 +309,8 @@ function showPopupConfirmOrder(e) {
 }
 
 function closePopupConfirmOrder() {
+  document.getElementById("txtNote").value = "";
+  document.getElementById("txtFoodQty").value = "1";
   document
     .getElementsByClassName("modal-container")[0]
     .classList.remove("open");
@@ -315,13 +327,19 @@ if (cookieUserName == null || cookieUserName.length < 1) {
 
 function confirmUserName() {
   if(txtuserName.validity.valid) {
+    const errorMsg = document.querySelector('.error');
+    if(errorMsg) {
+      errorMsg.remove();
+    }
     userName = txtuserName.value;
     document.getElementById("popup-username").classList.remove("open");
     setCookie("userName", userName, 1);
-    // appendLog('You joined')
     socket.emit("new-user", roomName, userName);
   }else {
-    alert('Nhập tên dôôôôô')
+    const errorElement = document.createElement("span");
+    errorElement.classList.add("error");
+    errorElement.innerHTML = "Nhập tên dôôôôôô";
+    document.querySelector('.group-input-name').append(errorElement);
   }
 }
 

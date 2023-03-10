@@ -30,6 +30,7 @@ socket.on("room-created", (room) => {
 
 // Delete Order
 function confirmDelete(event) {
+  console.log("🚀 ~ file: script.js:33 ~ confirmDelete ~ event:", event)
   let deletedOrder = {
     orderId: event.getAttribute("id"),
     deleteUser: getCookie("userName"),
@@ -37,6 +38,11 @@ function confirmDelete(event) {
     deliveryId: event.getAttribute("data-delivery-id"),
   };
   socket.emit("delete", deletedOrder);
+}
+
+// Edit Order
+function handleEdit(event) {
+  console.log("🚀 ~ file: script.js:45 ~ handleEdit ~ event:", event)
 }
 
 // Send food oder detail

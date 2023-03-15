@@ -196,7 +196,8 @@ app.post("/room", async (req, res) => {
             deliveryId: deliveryId,
             title: dish.name,
             image: dish.photos[1].value,
-            price: priceParser(dish.discount_price != null ? dish.discount_price.text : dish.price.text),
+            price: priceParser(dish.price.text),
+            discountPrice: dish.discount_price != null ? priceParser(dish.discount_price.text) : "",
             description: dish.description,
           })
           menuSchema.save();

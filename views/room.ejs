@@ -156,20 +156,24 @@
                                 <div class="summary-info">
                                   <span class="sum-qty-txt"><%= orderDetail.foodQty %></span>
                                   <span class="sum-food-txt"><%= orderDetail.foodTitle %></span>
-                                  <button class="btn-primary expand-button" type="button" 
-                                      data-bs-toggle="collapse" 
-                                      data-bs-target="<%= '#sum-'+index %>" 
-                                      aria-expanded="false" 
-                                      aria-controls="<%= 'sum-'+index %>">Note:
-                                      <% orderDetail.foodNote.forEach((note, index) => { %>
-                                        <% if (note.note) { %>
-                                          <% if (index > 0) { %>
-                                            ,
-                                          <% } %>
-                                          <%= note.userName %>
+                                    <% orderDetail.foodNote.forEach((note, noteIndex) => { %>
+                                      <% if (note.note) { %>
+                                        <% if (noteIndex === 0) { %>
+                                          <button class="btn-primary expand-button" type="button" 
+                                            data-bs-toggle="collapse" 
+                                            data-bs-target="<%= '#sum-'+index %>" 
+                                            aria-expanded="false" 
+                                            aria-controls="<%= 'sum-'+index %>">Note:
                                         <% } %>
-                                      <% }) %>
-                                  </button>
+                                        <% if (noteIndex > 0) { %>
+                                          ,
+                                        <% } %>
+                                        <%= note.userName %>
+                                        <% if (noteIndex === orderDetail.foodNote.length - 1) { %>
+                                          </button>
+                                        <% } %>
+                                      <% } %>
+                                    <% }) %>
                                   <div class="row expand-content">
                                     <div class="collapse multi-collapse" id="<%= 'sum-'+index %>">
                                       <div class="sum-user-note">

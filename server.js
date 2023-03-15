@@ -26,6 +26,7 @@ const SUCCESS = "200";
 const ERROR = "400";
 const AUTHORITY = "401";
 const PERMISSION_DENIED = "500";
+const UNAVAILABLE_VALUE = "503"
 
 //establish socket.io connection
 const app = express();
@@ -195,7 +196,7 @@ app.post("/room", async (req, res) => {
             deliveryId: deliveryId,
             title: dish.name,
             image: dish.photos[1].value,
-            price: priceParser(dish.price.text),
+            price: priceParser(dish.discount_price != null ? dish.discount_price.text : dish.price.text),
             description: dish.description,
           })
           menuSchema.save();
@@ -310,6 +311,17 @@ io.on("connection", (socket) => {
     console.log(
       `Order from ${orderUser}@${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`
     );
+
+    // TODO validate order request
+    // if (foodTitle) {
+    //   let updatedResult = {};
+    //   updatedResult.status = UNAVAILABLE_VALUE;
+    //   updatedResult.updatedOrder = orderReq;
+  
+    //   console.log(`Cannot send order. Food is invalid : ${foodTitle}`);
+  
+    //   return io.emit("update-order", updatedResult);
+    // }
 
     try {
       // Check if there is an existing order with the same roomId, deliveryId, orderUser, foodTitle

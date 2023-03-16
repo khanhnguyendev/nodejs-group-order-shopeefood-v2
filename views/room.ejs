@@ -111,8 +111,7 @@
                             <h2 class="order-title">Order List</h2>
                             <ol class="orders-list" id="display-order">
                               <% orders.forEach((orderDetail)=> { %>
-                                <li id="<%= orderDetail._id %>"
-                                  data-room-id="<%= orderDetail.roomId %>" data-delivery-id="<%= orderDetail.deliveryId %>">
+                                <li id="<%= orderDetail._id %>">
   
                                   <div class="order-detail">
                                     <img class="user-avatar" alt="User Avatar"
@@ -131,14 +130,16 @@
                                         <span class="price-txt">Price: <%=orderDetail.foodPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></span>
                                       </div>
                                       <% if (orderDetail.foodNote) { %>
-                                      <div id="order-info order-info-note">
+                                      <div id="order-info-note">
                                         <span class="note-txt"><%= orderDetail.foodNote %></span> 
                                       </div>
                                       <% } %>
                                     </div>
                                     <div class="order-option">
-                                      <img src="/assets/edit.png" alt="edit" onclick="handleEdit(this)" width="50px" height="50px">
-                                      <img src="/assets/smile.png" alt="delete" onclick="confirmDelete(this)" id="<%= orderDetail._id %>" width="50px" height="50px">
+                                      <img src="/assets/2edit.png" class="edit-order" alt="edit" title="edit" onclick="handleEdit(this)">
+                                      <img src="/assets/2x-icon.png" class="delete-order" alt="delete" title="delete"
+                                        onclick="confirmDelete(this)" id="<%= orderDetail._id %>" 
+                                        data-room-id="<%= orderDetail.roomId %>" data-delivery-id="<%= orderDetail.deliveryId %>">
                                     </div>
                                   </div>
                                 </li>
@@ -150,48 +151,52 @@
                           <div class="summary-right--wrapper">
                             <h2 class="order-title">Summary Order</h2>
                             <div class="summary-order-container" id="display-summary">
-                              
                               <% sumOrders.forEach((orderDetail, index)=> { %>
                               <div class="summary-detail">
-                                <div class="summary-info">
-                                  <span class="sum-qty-txt"><%= orderDetail.foodQty %></span>
-                                  <span class="sum-food-txt"><%= orderDetail.foodTitle %></span>
-                                    <% orderDetail.foodNote.forEach((note, noteIndex) => { %>
-                                      <% if (note.note) { %>
-                                        <% if (noteIndex === 0) { %>
-                                          <button class="btn-primary expand-button" type="button" 
-                                            data-bs-toggle="collapse" 
-                                            data-bs-target="<%= '#sum-'+index %>" 
-                                            aria-expanded="false" 
-                                            aria-controls="<%= 'sum-'+index %>">Note:
-                                        <% } %>
-                                        <% if (noteIndex > 0) { %>
-                                          ,
-                                        <% } %>
-                                        <%= note.userName %>
-                                        <% if (noteIndex === orderDetail.foodNote.length - 1) { %>
-                                          </button>
-                                        <% } %>
-                                      <% } %>
-                                    <% }) %>
-                                  <div class="row expand-content">
-                                    <div class="collapse multi-collapse" id="<%= 'sum-'+index %>">
-                                      <div class="sum-user-note">
-                                        <% orderDetail.foodNote.forEach((note) => { %>
-                                          <% if (note.note) { %>
-                                          <p><%= note.userName %> : <%= note.note %></p>
+                                <div class="summary-detail--content">
+                                  <div class="summary-info">
+                                    <span class="sum-qty-txt"><%= orderDetail.foodQty %> x </span>
+                                    <span class="sum-food-txt"><%= orderDetail.foodTitle %></span>
+                                      <% orderDetail.foodNote.forEach((note, noteIndex) => { %>
+                                        <% if (note.note) { %>
+                                          <% if (noteIndex === 0) { %>
+                                            <div class="note-wrapper">
+                                              <span>Note: </span>
+                                              <div class="btn-primary expand-button"
+                                                data-bs-toggle="collapse" 
+                                                data-bs-target="<%= '#sum-'+index %>" 
+                                                aria-expanded="false" 
+                                                aria-controls="<%= 'sum-'+index %>">
                                           <% } %>
-                                        <% }) %>
-                                      </div>
+                                          <% if (noteIndex > 0) { %>
+                                            ,
+                                          <% } %>
+                                          <%= note.userName %>
+                                          <% if (noteIndex === orderDetail.foodNote.length - 1) { %>
+                                          </div>
+                                          </div>
+                                          <% } %>
+                                        <% } %>
+                                      <% }) %>
+                                    
+                                  </div>
+                                  <div class="sum-total-txt">
+                                    <span><%= orderDetail.totalPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></span>
+                                  </div>
+                                </div>
+                                <div class="expand-content">
+                                  <div class="collapse multi-collapse" id="<%= 'sum-'+index %>">
+                                    <div class="sum-user-note">
+                                      <% orderDetail.foodNote.forEach((note) => { %>
+                                        <% if (note.note) { %>
+                                        <p><%= note.userName %> : <%= note.note %></p>
+                                        <% } %>
+                                      <% }) %>
                                     </div>
                                   </div>
                                 </div>
-                                <div class="sum-total-txt">
-                                  <span><%= orderDetail.totalPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></span>
-                                </div>
                               </div>
                               <% }) %>
-
                             </div>
                             <div class="subtotal-container">
                               <div class="subtotal-info">
@@ -258,7 +263,7 @@
           <p id="txtFoodPrice" type="text" disabled placeholder="Price"></p>
           <p id="txtFoodDes" type="text" disabled placeholder="Description"></p>
         </div>
-        <input id="txtFoodQty" type="number" min="1" max="100" value="1">
+        <input id="txtFoodQty" type="number" min="0" max="100" value="1">
         <input id="txtNote" type="text" placeholder="Note">
         <div class="popup-confirm-btn">
           <button id="orderCloseBtn" onclick="closePopupConfirmOrder()">Close</button>

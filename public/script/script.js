@@ -39,6 +39,11 @@ function confirmDelete(event) {
   socket.emit("delete", deletedOrder);
 }
 
+// Edit Order
+function handleEdit(event) {
+  alert("Chưa làm, bữa khác xài đi")
+}
+
 // Send food oder detail
 function sendOrder() {
   const userName = getCookie("userName");
@@ -61,8 +66,8 @@ function sendOrder() {
     foodQty: document.getElementById("txtFoodQty").value,
     foodNote: document.getElementById("txtNote").value,
   };
-  closePopupConfirmOrder();
   socket.emit("order", orderDetail);
+  closePopupConfirmOrder();
 }
 
 // Listen for new order
@@ -193,30 +198,54 @@ async function updateSummary() {
       el.classList.add("summary-detail");
       let content='';
       content = `
-            <div class="summary-info">
-                <span class="sum-qty-txt">${order.foodQty}</span>
-                <span class="sum-food-txt">${order.foodTitle}</span>`;
+      <div class="summary-detail">
+        <div class="summary-detail--content">
+          <div class="summary-info">
+              <span class="sum-qty-txt">${order.foodQty}</span>
+              <span class="sum-food-txt">${order.foodTitle}</span>
+              `;
+        order.foodNote.forEach((note,noteIndex) => {
+          if(note.note) {
+            if (noteIndex === 0) {
+              content += `
+                <div class="note-wrapper"
+                  <span>Note: </span>`
+              content += `<div class="btn-primary expand-button"
+                data-bs-toggle="collapse" 
+                data-bs-target="#sum-${index}" 
+                aria-expanded="false" 
+                aria-controls="sum-${index}">`
+            }
+            if(noteIndex > 0) {
+              content += ','
+            }
+            content += `${note.userName}`;
+            if (noteIndex === order.foodNote.length - 1){
+              content += `</div></div>`
+            }
+          }
+        })
+      content += `
+                </div>
+                <div class="sum-total-txt">
+                  <span>${formatPrice(order.totalPrice)}</span>
+                </div>
+              </div>`
+      content += `
+            <div class="expand-content">
+              <div class="collapse multi-collapse" id="sum-${index}">
+                <div class="sum-user-note">`;
       if(order.foodNote.length != 0) {
         order.foodNote.forEach((note,noteIndex) => {
-          if(noteIndex == 0) {
-            content += `
-              <button class="btn btn-primary expand-button" type="button" data-bs-toggle="collapse" data-bs-target="#sum-${index}" aria-expanded="false" aria-controls="sum-${index}">+</button>
-              <div class="row expand-content">
-                <div class="collapse multi-collapse" id="sum-${index}">
-                  <div class="sum-user-note">`
-          }
           content += `<p id="${note.id}">${note.userName} : ${note.note} </p>`;
         })
-        content += `
-              </div>
+      }
+      content += `
             </div>
           </div>
         </div>
-        <div class="sum-total-txt">
-          <span>${formatPrice(order.totalPrice)}</span>
-        </div>
-        `;
-      }
+      </div>
+     `;
       el.innerHTML = content;
       summaryContainer.appendChild(el);
       totalItems += order.foodQty;
@@ -234,9 +263,9 @@ async function updateSummary() {
 function appendNewOrder(newOrder) {
   const el = document.createElement("li");
   el.id = newOrder._id;
-  el.setAttribute("onclick", "confirmDelete(this)");
-  el.setAttribute("data-room-id", newOrder.roomId);
-  el.setAttribute("data-delivery-id", newOrder.deliveryId);
+  // el.setAttribute("onclick", "confirmDelete(this)");
+  // el.setAttribute("data-room-id", newOrder.roomId);
+  // el.setAttribute("data-delivery-id", newOrder.deliveryId);
 
   let divFoodNote = ``;
   if (newOrder.foodNote) {
@@ -264,6 +293,12 @@ function appendNewOrder(newOrder) {
                   <span class="price-txt">Price: ${formatPrice(newOrder.foodPrice)}</span>
                 </div>
                 ${divFoodNote}
+              </div>
+              <div class="order-option">
+                <img src="/assets/2edit.png" class="edit" alt="edit" onclick="handleEdit(this)">
+                <img src="/assets/2x-icon.png" class="delete" alt="delete" 
+                  onclick="confirmDelete(this)" id="${newOrder._id}" 
+                  data-room-id="${newOrder.roomId}" data-delivery-id="${newOrder.deliveryId}">
               </div>
             </div>
         `;
@@ -299,6 +334,8 @@ function showPopupConfirmOrder(e) {
 }
 
 function closePopupConfirmOrder() {
+  document.getElementById("txtNote").value = "";
+  document.getElementById("txtFoodQty").value = "1";
   document
     .getElementsByClassName("modal-container")[0]
     .classList.remove("open");
@@ -314,14 +351,39 @@ if (cookieUserName == null || cookieUserName.length < 1) {
 }
 
 function confirmUserName() {
-  if(txtuserName.validity.valid) {
+  const maxLengthName = 25
+  let name = txtuserName.value.length
+  if(txtuserName.validity.valid && name <= maxLengthName) {
+    const errorMsg = document.querySelector('.error');
+    if(errorMsg) {
+      errorMsg.remove();
+    }
     userName = txtuserName.value;
     document.getElementById("popup-username").classList.remove("open");
     setCookie("userName", userName, 1);
-    // appendLog('You joined')
     socket.emit("new-user", roomName, userName);
+    notify(
+      TOASTR_SUCCESS,
+      `Hé lô ${userName}`
+    );
   }else {
-    alert('Nhập tên dôôôôô')
+    const errorElement = document.createElement("span");
+    errorElement.classList.add("error");
+    let errorMessage = "";
+    if(name > maxLengthName) {
+      errorMessage = "Tên gì mà dài thòng. Nhập lại đi";
+    }
+    if(!txtuserName.validity.valid) {
+      errorMessage = "Nhập tên dôôôôôô";
+    }
+    errorElement.innerHTML = errorMessage;
+    let inputNameError = document.querySelector('.group-input-name').querySelector('.error')
+    if(inputNameError) {
+      inputNameError.innerHTML = errorMessage
+    }else {
+      document.querySelector('.group-input-name').append(errorElement);
+    }
+    
   }
 }
 
@@ -351,7 +413,7 @@ function eraseCookie(name) {
 }
 
 // Notify message
-function notify(type, mainMessage, subMessage) {
+function notify(type, mainMessage = null, subMessage = null) {
   toastr.options = {
     width: 400,
     progressBar: true,

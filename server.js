@@ -25,8 +25,9 @@ const DEBUG = "DEBUG";
 const SUCCESS = "200";
 const ERROR = "400";
 const AUTHORITY = "401";
+const UNKNOWN_VALUE = "500";
 const PERMISSION_DENIED = "500";
-const UNAVAILABLE_VALUE = "503"
+const UNAVAILABLE_VALUE = "503";
 
 //establish socket.io connection
 const app = express();
@@ -96,7 +97,6 @@ connection.once("open", () => {
         break;
 
       case "delete":
-
         console.log(`Mongoose successfully deleted ${change.documentKey._id}`);
         break;
     }
@@ -123,11 +123,11 @@ app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 
 const rooms = {};
-let roomName = '';
-let roomId = '';
-let deliveryId = ''
-let restaurantId = ''
-let restaurantName = ''
+let roomName = "";
+let roomId = "";
+let deliveryId = "";
+let restaurantId = "";
+let restaurantName = "";
 
 //bodyParser middleware used for resolving the req and res body objects (urlEncoded and json formats)
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -149,46 +149,53 @@ app.post("/room", async (req, res) => {
   roomName = req.body.orderShopName;
   rooms[roomName] = { users: {} };
   shopUrl = req.body.orderShopUrl.replace("https://shopeefood.vn/", "");
-  let restaurantDes = ''
+  let restaurantDes = "";
 
-  const deliveryInfo = await axios.get(`${baseUrl}/API/getDeliveryInfo?shopUrl=${shopUrl}`);
-  if (deliveryInfo.data.result == 'success') {
-    restaurantId = deliveryInfo.data.reply.restaurant_id
-    deliveryId = deliveryInfo.data.reply.delivery_id
+  const deliveryInfo = await axios.get(
+    `${baseUrl}/API/getDeliveryInfo?shopUrl=${shopUrl}`
+  );
+  if (deliveryInfo.data.result == "success") {
+    restaurantId = deliveryInfo.data.reply.restaurant_id;
+    deliveryId = deliveryInfo.data.reply.delivery_id;
   }
 
   if (deliveryId) {
-    const restaurantInfo = await axios.get(`${baseUrl}/API/getResInfo?requestId=${deliveryId}`);
-    if (restaurantInfo.data.result == 'success') {
-      restaurantName = restaurantInfo.data.reply.delivery_detail.name
-      restaurantDes = restaurantInfo.data.reply.delivery_detail.short_description
+    const restaurantInfo = await axios.get(
+      `${baseUrl}/API/getResInfo?requestId=${deliveryId}`
+    );
+    if (restaurantInfo.data.result == "success") {
+      restaurantName = restaurantInfo.data.reply.delivery_detail.name;
+      restaurantDes =
+        restaurantInfo.data.reply.delivery_detail.short_description;
     }
   }
 
-  const room = await RoomSchema.findOne({ roomName, restaurantId, deliveryId});
+  const room = await RoomSchema.findOne({ roomName, restaurantId, deliveryId });
   if (!room) {
     const roomSchema = new RoomSchema({
       roomName: roomName,
       deliveryId: deliveryId,
-      shopId : restaurantId,
+      shopId: restaurantId,
       shopName: restaurantName,
       description: restaurantDes,
       capacity: 99,
       createdAt: new Date(),
-    })
+    });
     await roomSchema.save();
-    roomId = roomSchema._id
+    roomId = roomSchema._id;
   } else {
-    roomId = room._id
+    roomId = room._id;
   }
-  
+
   const menu = await MenuSchema.find({ deliveryId });
 
   if (menu.length == 0) {
-    const resDishes = await axios.get(`${baseUrl}/API/getResDishes?&requestId=${deliveryId}`)
-    if (resDishes.data.result == 'success') {
-      const menuInfo = resDishes.data.reply.menu_infos
-  
+    const resDishes = await axios.get(
+      `${baseUrl}/API/getResDishes?&requestId=${deliveryId}`
+    );
+    if (resDishes.data.result == "success") {
+      const menuInfo = resDishes.data.reply.menu_infos;
+
       menuInfo.forEach((menuInfo) => {
         menuInfo.dishes.forEach((dish) => {
           const menuSchema = new MenuSchema({
@@ -197,13 +204,15 @@ app.post("/room", async (req, res) => {
             title: dish.name,
             image: dish.photos[1].value,
             price: priceParser(dish.price.text),
-            discountPrice: dish.discount_price != null ? priceParser(dish.discount_price.text) : "",
+            discountPrice:
+              dish.discount_price != null
+                ? priceParser(dish.discount_price.text)
+                : "",
             description: dish.description,
-          })
+          });
           menuSchema.save();
         });
       });
-      
     }
   }
 
@@ -216,12 +225,12 @@ app.get("/:room", async (req, res) => {
   if (!room) {
     return res.redirect("/");
   }
-  const roomName = req.params.room
+  const roomName = req.params.room;
 
   // Get room information
-  const roomInfo = await RoomSchema.findOne({ roomName, deliveryId })
+  const roomInfo = await RoomSchema.findOne({ roomName, deliveryId });
 
-  roomId = roomInfo._id
+  roomId = roomInfo._id;
 
   // Get menu from database
   const menus = await getMenuByDeliveryId(deliveryId);
@@ -232,7 +241,7 @@ app.get("/:room", async (req, res) => {
   // Render for refresh or new connection
   res.render("room", {
     roomName: roomName,
-    roomId : roomId,
+    roomId: roomId,
     deliveryId: deliveryId,
     resName: restaurantName,
     foods: menus,
@@ -245,7 +254,9 @@ app.get("/:room", async (req, res) => {
 
 async function getMenuByDeliveryId(deliveryId) {
   try {
-    const menus = await axios.get(`${baseUrl}/API/getMenuByDeliveryId?requestId=${deliveryId}`);
+    const menus = await axios.get(
+      `${baseUrl}/API/getMenuByDeliveryId?requestId=${deliveryId}`
+    );
     if (menus?.data && menus.data.result == SUCCESS) {
       return menus.data.reply;
     }
@@ -257,7 +268,9 @@ async function getMenuByDeliveryId(deliveryId) {
 
 async function getHistoryOrder(roomId, deliveryId) {
   try {
-    const orders = await axios.get(`${baseUrl}/API/getOrder?roomId=${roomId}&requestId=${deliveryId}`);
+    const orders = await axios.get(
+      `${baseUrl}/API/getOrder?roomId=${roomId}&requestId=${deliveryId}`
+    );
     if (orders?.data && orders.data.result == SUCCESS) {
       return orders.data.reply;
     }
@@ -307,7 +320,6 @@ io.on("connection", (socket) => {
     let foodPrice = priceParser(orderReq.foodPrice);
     let foodQty = parseInt(orderReq.foodQty);
     let foodNote = orderReq.foodNote;
-    let ipUser = clientIp
 
     console.log(
       `Order from ${orderUser}@${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`
@@ -318,19 +330,63 @@ io.on("connection", (socket) => {
     //   let updatedResult = {};
     //   updatedResult.status = UNAVAILABLE_VALUE;
     //   updatedResult.updatedOrder = orderReq;
-  
+
     //   console.log(`Cannot send order. Food is invalid : ${foodTitle}`);
-  
+
     //   return io.emit("update-order", updatedResult);
     // }
 
     try {
-      // Check if there is an existing order with the same roomId, deliveryId, orderUser, foodTitle
-      let historyOrder = await OrderSchema.findOne({roomId, deliveryId, orderUser, foodTitle, ipUser});
+      const newOrder = new OrderSchema({
+        roomId: roomId,
+        deliveryId: deliveryId,
+        orderUser: orderUser,
+        ipUser: clientIp,
+        foodTitle: foodTitle,
+        foodPrice: foodPrice,
+        foodQty: foodQty,
+        foodNote: foodNote,
+        createdTime: new Date(),
+        updatedTime: new Date(),
+      });
+
+      await newOrder.save();
+
+      console.log(`New order created: \n ${JSON.stringify(newOrder)}`);
+    } catch (error) {
+      console.log("Error with creating order:", error);
+    }
+  });
+
+  // Update API
+  socket.on("update", async (orderReq) => {
+    let clientIp = socket.request.connection.remoteAddress.replace(
+      "::ffff:",
+      ""
+    );
+
+    let orderUser = orderReq.orderUser;
+    let orderId = orderReq.orderId;
+    let ipUser = clientIp;
+    let foodQty = orderReq.foodQty;
+    let foodNote = orderReq.foodNote;
+
+    console.log(
+      `Update order from ${orderUser}@${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`
+    );
+
+    try {
+      // Check if there is an existing order with the same roomId, deliveryId, orderId
+      let historyOrder = await OrderSchema.findById(orderId);
 
       if (historyOrder) {
-        // If an existing order is found, update the foodQty, updatedTime
-        historyOrder.foodQty += foodQty;
+        // Delele order if Qty = 0
+        if (foodQty == 0) {
+          return await deleteOrderById(orderId);
+        }
+
+        // If an existing order is found
+        historyOrder.foodQty = foodQty;
         historyOrder.foodNote = foodNote;
         historyOrder.updatedTime = new Date();
         historyOrder.__v += 1;
@@ -338,23 +394,11 @@ io.on("connection", (socket) => {
 
         console.log(`Order updated: \n ${JSON.stringify(historyOrder)}`);
       } else {
-        // If no existing order is found, create a new order
-        const newOrder = new OrderSchema({
-          roomId: roomId,
-          deliveryId: deliveryId,
-          orderUser: orderUser,
-          ipUser: clientIp,
-          foodTitle: foodTitle,
-          foodPrice: foodPrice,
-          foodQty: foodQty,
-          foodNote: foodNote,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        });
+        let updatedResult = {};
+        updatedResult.status = UNKNOWN_VALUE;
+        updatedResult.updatedOrder = orderReq;
 
-        await newOrder.save();
-
-        console.log(`New order created: \n ${JSON.stringify(newOrder)}`);
+        io.emit("update-order", updatedResult);
       }
     } catch (error) {
       console.log("Error with creating order:", error);
@@ -371,7 +415,7 @@ io.on("connection", (socket) => {
     let deliveryId = deletedReq.deliveryId;
     let deletedUser = deletedReq.deleteUser;
 
-    const room = await RoomSchema.findOne({ _id: roomId, deliveryId})
+    const room = await RoomSchema.findOne({ _id: roomId, deliveryId });
     if (room.length == 0) {
       console.log(`Error with deleting order: \n`, deletedReq);
       return;
@@ -391,25 +435,32 @@ io.on("connection", (socket) => {
       let deleteResult = {};
       deleteResult.status = PERMISSION_DENIED;
       deleteResult.order = order;
-      return io.emit("delete-order", deleteResult);
+      io.emit("delete-order", deleteResult);
     }
-    const deletedOrder = await OrderSchema.findOneAndDelete({
-      _id: deletedReq.orderId,
-    });
-    if (!deletedOrder) {
-      console.log(`Error with deleting order: \n`, deletedOrder);
-      return;
-      // let deleteResult = {}
-      // deleteResult.status = PERMISSION_DENIED
-      // deleteResult.order = historyOrder
-      // return io.emit("delete-order", deleteResult);
-    }
-    let deleteResult = {};
-    deleteResult.status = SUCCESS;
-    deleteResult.order = order;
-    return io.emit("delete-order", deleteResult);
+
+    await deleteOrderById(deletedReq.orderId);
   });
 });
+
+// Find and delete order by id
+async function deleteOrderById(orderId) {
+  const order = await OrderSchema.findOne({ _id: orderId });
+  const deletedOrder = await OrderSchema.findOneAndDelete({
+    _id: orderId,
+  });
+  if (!deletedOrder) {
+    console.log(`Error with deleting order: \n`, deletedOrder);
+    return;
+    // let deleteResult = {}
+    // deleteResult.status = PERMISSION_DENIED
+    // deleteResult.order = historyOrder
+    // return io.emit("delete-order", deleteResult);
+  }
+  let deleteResult = {};
+  deleteResult.status = SUCCESS;
+  deleteResult.order = order;
+  return io.emit("delete-order", deleteResult);
+}
 
 // Summarize the orders
 function summaryOrders(ordersJson) {

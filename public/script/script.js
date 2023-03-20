@@ -28,23 +28,7 @@ socket.on("room-created", (room) => {
   roomContainer.append(roomLink);
 });
 
-// Delete Order
-function confirmDelete(event) {
-  let deletedOrder = {
-    orderId: event.getAttribute("id"),
-    deleteUser: getCookie("userName"),
-    roomId: event.getAttribute("data-room-id"),
-    deliveryId: event.getAttribute("data-delivery-id"),
-  };
-  socket.emit("delete", deletedOrder);
-}
-
-// Edit Order
-function handleEdit(event) {
-  alert("Chưa làm, bữa khác xài đi")
-}
-
-// Send food oder detail
+// Send oder
 function sendOrder() {
   const userName = getCookie("userName");
   if (!userName || userName.length < 1) {
@@ -69,6 +53,91 @@ function sendOrder() {
   socket.emit("order", orderDetail);
   closePopupConfirmOrder();
 }
+
+// Edit Order
+function updateOrder() {
+  const userName = getCookie("userName");
+  if (!userName || userName.length < 1) {
+    // User name undefined
+    return notify(
+      TOASTR_ERROR,
+      "Username undefined",
+      "Please remove cookies then try again!"
+    );
+  }
+
+  const orderDetail = {
+    roomName: roomName,
+    orderUser: userName,
+    orderId : document.getElementById("orderId").value,
+    orderTime: getCurrentTime(),
+    foodQty: document.getElementById("uptFoodQty").value,
+    foodNote: document.getElementById("uptFoodNote").value,
+
+  };
+  socket.emit("update", orderDetail);
+  closePopupUpdateOrder();
+}
+
+// Delete Order
+function confirmDelete(event) {
+  let deletedOrder = {
+    orderId: event.getAttribute("id"),
+    deleteUser: getCookie("userName"),
+    roomId: event.getAttribute("data-room-id"),
+    deliveryId: event.getAttribute("data-delivery-id"),
+  };
+  socket.emit("delete", deletedOrder);
+}
+
+// Popup confirm order
+function showPopupConfirmOrder(e) {
+  document.getElementsByClassName("modal-container")[0].className += " open";
+  document.getElementById("popup-confirm").style.display = "block";
+
+  // Fill form
+  document.getElementById("txtFoodName").innerHTML =
+    e.getAttribute("data-title");
+  document.getElementById("txtFoodPrice").innerHTML =
+    e.getAttribute("data-price");
+  document.getElementById("txtFoodDes").innerHTML =
+    e.getAttribute("data-des").length == 0
+      ? `No description`
+      : e.getAttribute("data-des");
+}
+
+// Popup update order
+function showPopupUpdateOrder(e) {
+  document.getElementsByClassName("modal-container")[0].className += " open";
+  document.getElementById("popup-update").style.display = "block";
+
+  // Fill form
+  document.getElementById("uptFoodName").innerHTML =
+    e.getAttribute("data-title");
+  document.getElementById("uptFoodPrice").innerHTML =
+    e.getAttribute("data-price");
+    document.getElementById("orderId").value =
+      e.getAttribute("data-id");
+}
+
+function closePopupConfirmOrder() {
+  document.getElementById("txtNote").value = "";
+  document.getElementById("txtFoodQty").value = "1";
+  document
+    .getElementsByClassName("modal-container")[0]
+    .classList.remove("open");
+  document.getElementById("popup-confirm").style.display = "none";
+}
+
+function closePopupUpdateOrder() {
+  document.getElementById("txtNote").value = "";
+  document.getElementById("txtFoodQty").value = "1";
+  document
+    .getElementsByClassName("modal-container")[0]
+    .classList.remove("open");
+  document.getElementById("popup-update").style.display = "none";
+}
+
 
 // Listen for new order
 socket.on("new-order", async (orderResult) => {
@@ -295,7 +364,9 @@ function appendNewOrder(newOrder) {
                 ${divFoodNote}
               </div>
               <div class="order-option">
-                <img src="/assets/2edit.png" class="edit" alt="edit" onclick="handleEdit(this)">
+                <img src="/assets/2edit.png" class="edit" alt="edit" 
+                data-id="${newOrder._id}" data-title="${newOrder.foodTitle}" data-price="${newOrder.foodPrice}" data-qty="${newOrder.foodQty}"
+                onclick="showPopupUpdateOrder(this)"">
                 <img src="/assets/2x-icon.png" class="delete" alt="delete" 
                   onclick="confirmDelete(this)" id="${newOrder._id}" 
                   data-room-id="${newOrder.roomId}" data-delivery-id="${newOrder.deliveryId}">
@@ -315,31 +386,6 @@ function appendUpdatedOrder(updatedOrder) {
       ".note-txt"
     ).innerHTML = `${updatedOrder.foodNote}`;
   }
-}
-
-// Popup confirm order
-function showPopupConfirmOrder(e) {
-  document.getElementsByClassName("modal-container")[0].className += " open";
-  document.getElementById("popup-confirm").style.display = "block";
-
-  // Fill form
-  document.getElementById("txtFoodName").innerHTML =
-    e.getAttribute("data-title");
-  document.getElementById("txtFoodPrice").innerHTML =
-    e.getAttribute("data-price");
-  document.getElementById("txtFoodDes").innerHTML =
-    e.getAttribute("data-des").length == 0
-      ? `No description`
-      : e.getAttribute("data-des");
-}
-
-function closePopupConfirmOrder() {
-  document.getElementById("txtNote").value = "";
-  document.getElementById("txtFoodQty").value = "1";
-  document
-    .getElementsByClassName("modal-container")[0]
-    .classList.remove("open");
-  document.getElementById("popup-confirm").style.display = "none";
 }
 
 // Display popup define username

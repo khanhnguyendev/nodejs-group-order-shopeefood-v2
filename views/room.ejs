@@ -136,7 +136,9 @@
                                       <% } %>
                                     </div>
                                     <div class="order-option">
-                                      <img src="/assets/2edit.png" class="edit-order" alt="edit" title="edit" onclick="handleEdit(this)">
+                                      <img src="/assets/2edit.png" class="edit-order" alt="edit" title="edit" 
+                                        data-id="<%= orderDetail._id %>" data-title="<%= orderDetail.foodTitle %>" data-price="<%= orderDetail.foodPrice %>" data-qty="<%= orderDetail.foodQty %>"
+                                        onclick="showPopupUpdateOrder(this)">
                                       <img src="/assets/2x-icon.png" class="delete-order" alt="delete" title="delete"
                                         onclick="confirmDelete(this)" id="<%= orderDetail._id %>" 
                                         data-room-id="<%= orderDetail.roomId %>" data-delivery-id="<%= orderDetail.deliveryId %>">
@@ -254,8 +256,8 @@
         </div>
     </div>
 
-    <!-- POPUP Confirm Order -->
     <div class="modal-container">
+      <!-- POPUP Confirm Order -->
       <div class="popup-confirm" id="popup-confirm" style="display: none;">
         <span id="popup-confirm-title">Confirm your order</span>
         <div class="popup-confirm-info">
@@ -268,6 +270,23 @@
         <div class="popup-confirm-btn">
           <button id="orderCloseBtn" onclick="closePopupConfirmOrder()">Close</button>
           <button id="orderConfirmBtn" onclick="sendOrder()">Order</button>
+        </div>
+      </div>
+
+      
+      <!-- POPUP Update Order -->
+      <div class="popup-confirm" id="popup-update" style="display: none;">
+        <span id="popup-confirm-title">Update your order</span>
+        <div class="popup-confirm-info">
+          <p id="uptFoodName" type="text" disabled placeholder="Food Name"></p>
+          <p id="uptFoodPrice" type="text" disabled placeholder="Price"></p>
+        </div>
+        <input id="uptFoodQty" type="number" min="0" max="100" value="1">
+        <input id="uptFoodNote" type="text" placeholder="Note">
+        <input id="orderId" type="hidden" value="">
+        <div class="popup-confirm-btn">
+          <button id="orderCloseBtn" onclick="closePopupUpdateOrder()">Close</button>
+          <button id="orderConfirmBtn" onclick="updateOrder()">Update</button>
         </div>
       </div>
     </div>

@@ -364,10 +364,10 @@ function appendNewOrder(newOrder) {
                 ${divFoodNote}
               </div>
               <div class="order-option">
-                <img src="/assets/2edit.png" class="edit" alt="edit" 
+                <img src="/assets/2edit.png" class="edit-order" alt="edit" 
                 data-id="${newOrder._id}" data-title="${newOrder.foodTitle}" data-price="${newOrder.foodPrice}" data-qty="${newOrder.foodQty}"
                 onclick="showPopupUpdateOrder(this)"">
-                <img src="/assets/2x-icon.png" class="delete" alt="delete" 
+                <img src="/assets/2x-icon.png" class="delete-order" alt="delete" 
                   onclick="confirmDelete(this)" id="${newOrder._id}" 
                   data-room-id="${newOrder.roomId}" data-delivery-id="${newOrder.deliveryId}">
               </div>

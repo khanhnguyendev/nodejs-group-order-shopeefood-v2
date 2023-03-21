@@ -129,6 +129,7 @@
                                       <div class="order-info order-infor-price">
                                         <span class="price-txt">Price: <%=orderDetail.foodPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></span>
                                       </div>
+                                      <i class="fa fa-pencil" aria-hidden="true"></i>
                                       <% if (orderDetail.foodNote) { %>
                                       <div id="order-info-note">
                                         <span class="note-txt"><%= orderDetail.foodNote %></span> 
@@ -165,6 +166,7 @@
                                             <div class="note-wrapper">
                                               <span>Note: </span>
                                               <div class="btn-primary expand-button"
+                                                title="Bấm dô đi"
                                                 data-bs-toggle="collapse" 
                                                 data-bs-target="<%= '#sum-'+index %>" 
                                                 aria-expanded="false" 

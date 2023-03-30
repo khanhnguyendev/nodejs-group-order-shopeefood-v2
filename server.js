@@ -140,6 +140,12 @@ app.get("/", (req, res) => {
   res.render("index", { rooms: rooms });
 });
 
+app.get("/profile/:userName", (req, res) => {
+  let userInfo = {}
+  userInfo.name = "Test"
+  res.render("profile", {userInfo: userInfo});
+})
+
 app.post("/room", async (req, res) => {
   // Handle url not available
   if (rooms[req.body.orderShopName] != null) {

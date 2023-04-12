@@ -150,8 +150,8 @@ socket.on("new-order", async (orderResult) => {
       // notify new order status
       notify(
         TOASTR_SUCCESS,
-        `Order Success`,
-        `${orderResult.newOrder.orderUser} : ${orderResult.newOrder.foodTitle}`
+        `${orderResult.newOrder.orderUser} ordered`,
+        `${orderResult.newOrder.foodTitle}`
       );
       break;
 
@@ -172,9 +172,14 @@ socket.on("update-order", async (updatedResult) => {
       // notify update order status
       notify(
         TOASTR_SUCCESS,
-        `Updated Success`,
-        `${updatedResult.updatedOrder.orderUser} : ${updatedResult.updatedOrder.foodTitle}`
+        `${updatedResult.updatedOrder.orderUser} updated`,
+        `${updatedResult.updatedOrder.foodTitle}`
       );
+      break;
+
+    case PERMISSION_DENIED:
+      // notify delete status
+      notify(TOASTR_ERROR, `Update Failed`, `Bạn không có quyền`);
       break;
 
     default:
@@ -195,17 +200,18 @@ socket.on("delete-order", async (deleteResult) => {
       // notify delete status
       notify(
         TOASTR_SUCCESS,
-        `Delete Success`,
-        `${deleteResult.order.orderUser} : ${deleteResult.order.foodTitle}`
+        `${deleteResult.order.orderUser} deleted`,
+        `${deleteResult.order.foodTitle}`
       );
       break;
 
     case PERMISSION_DENIED:
       // notify delete status
-      notify(TOASTR_ERROR, `Delete Failed`, `Permission Denied`);
+      notify(TOASTR_ERROR, `Delete Failed`, `Bạn không có quyền`);
+      break;
 
     default:
-      // notify(TOASTR_ERROR, "Delete Failed", "Something went wrong");
+      notify(TOASTR_ERROR, "Delete Failed", "Something went wrong");
       break;
   }
 });
@@ -364,10 +370,10 @@ function appendNewOrder(newOrder) {
                 ${divFoodNote}
               </div>
               <div class="order-option">
-                <img src="/assets/2edit.png" class="edit" alt="edit" 
+                <img src="/assets/edit-ico.png" class="edit" alt="edit" 
                 data-id="${newOrder._id}" data-title="${newOrder.foodTitle}" data-price="${newOrder.foodPrice}" data-qty="${newOrder.foodQty}"
                 onclick="showPopupUpdateOrder(this)"">
-                <img src="/assets/2x-icon.png" class="delete" alt="delete" 
+                <img src="/assets/delete-ico.png" class="delete" alt="delete" 
                   onclick="confirmDelete(this)" id="${newOrder._id}" 
                   data-room-id="${newOrder.roomId}" data-delivery-id="${newOrder.deliveryId}">
               </div>

@@ -373,7 +373,6 @@ io.on("connection", (socket) => {
 
     let orderUser = orderReq.orderUser;
     let orderId = orderReq.orderId;
-    let ipUser = clientIp;
     let foodQty = orderReq.foodQty;
     let foodNote = orderReq.foodNote;
 
@@ -384,6 +383,14 @@ io.on("connection", (socket) => {
     try {
       // Check if there is an existing order with the same roomId, deliveryId, orderId
       let historyOrder = await OrderSchema.findById(orderId);
+
+      if (!historyOrder || historyOrder.orderUser != orderUser || historyOrder.ipUser != clientIp) {
+        console.log(`User ${orderUser}@${clientIp} permission denied\nOrderId: ${historyOrder._id}`);
+        let updatedResult = {};
+        updatedResult.status = PERMISSION_DENIED;
+        updatedResult.updatedOrder = orderReq;
+        return socket.emit("update-order", updatedResult);
+      }
 
       if (historyOrder) {
         // Delele order if Qty = 0
@@ -441,7 +448,7 @@ io.on("connection", (socket) => {
       let deleteResult = {};
       deleteResult.status = PERMISSION_DENIED;
       deleteResult.order = order;
-      io.emit("delete-order", deleteResult);
+      return socket.emit("delete-order", deleteResult);
     }
 
     await deleteOrderById(deletedReq.orderId);

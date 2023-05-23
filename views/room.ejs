@@ -89,6 +89,7 @@
                           <h2 id="txtShopName"><%= resName %></h2>
                         </div>
                         <div class="menu-wrapper">
+                          <!-- <p><%= JSON.stringify(foods) %></p> -->
                           <% foods.forEach((food)=> { %>
                           <div class="card btn-border-dark">
                             <img class="card-img-top" src="<%= food.image %>">
@@ -160,10 +161,11 @@
                                   <div class="summary-info">
                                     <span class="sum-qty-txt"><%= orderDetail.foodQty %> x </span>
                                     <span class="sum-food-txt"><%= orderDetail.foodTitle %></span>
-                                      <% orderDetail.foodNote.forEach((note, noteIndex) => { %>
-                                        <% if (note.note) { %>
+                                     <!-- <p class="result"><%= orderDetail.foodNote.findIndex((x) => x.note !== '') %></p> -->
+                                      <% if (orderDetail.foodNote.findIndex((x) => x.note !== '') !== -1) { %>
+                                        <% orderDetail.foodNote.forEach((note, noteIndex) => { %>
                                           <% if (noteIndex === 0) { %>
-                                            <div class="note-wrapper">
+                                            <div class="note-wrapper xxxx">
                                               <span>Note: </span>
                                               <div class="btn-primary expand-button"
                                                 title="Bấm dô đi"
@@ -172,16 +174,18 @@
                                                 aria-expanded="false" 
                                                 aria-controls="<%= 'sum-'+index %>">
                                           <% } %>
-                                          <% if (noteIndex > 0) { %>
-                                            ,
+                                          <% if (note.note) { %>
+                                            <% if (noteIndex > orderDetail.foodNote.findIndex((x) => x.note !== '')) { %>
+                                              ,
+                                            <% } %>
+                                            <%= note.userName %>
                                           <% } %>
-                                          <%= note.userName %>
                                           <% if (noteIndex === orderDetail.foodNote.length - 1) { %>
                                           </div>
                                           </div>
                                           <% } %>
-                                        <% } %>
-                                      <% }) %>
+                                        <% }) %>
+                                      <% } %>
                                     
                                   </div>
                                   <div class="sum-total-txt">

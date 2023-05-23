@@ -271,6 +271,7 @@ async function updateSummary() {
     summaryOrders.forEach((order,index) => {
       const el = document.createElement("div");
       el.classList.add("summary-detail");
+      let noteIndex = this.checkExistNote(order.foodNote);
       let content='';
       content = `
       <div class="summary-detail">
@@ -279,9 +280,9 @@ async function updateSummary() {
               <span class="sum-qty-txt">${order.foodQty}</span>
               <span class="sum-food-txt">${order.foodTitle}</span>
               `;
-        order.foodNote.forEach((note,noteIndex) => {
-          if(note.note) {
-            if (noteIndex === 0) {
+        if(noteIndex !== -1) {
+          order.foodNote.forEach((note,index) => {
+            if (index === 0) {
               content += `
                 <div class="note-wrapper"
                   <span>Note: </span>`
@@ -291,15 +292,19 @@ async function updateSummary() {
                 aria-expanded="false" 
                 aria-controls="sum-${index}">`
             }
-            if(noteIndex > 0) {
-              content += ','
+            if(note.note) {
+              if(index > noteIndex) {
+                content += ','
+              }
+              content += `${note.userName}`;
             }
-            content += `${note.userName}`;
-            if (noteIndex === order.foodNote.length - 1){
+            
+            if (index === order.foodNote.length - 1){
               content += `</div></div>`
             }
-          }
-        })
+          })
+        }
+      
       content += `
                 </div>
                 <div class="sum-total-txt">
@@ -310,9 +315,11 @@ async function updateSummary() {
             <div class="expand-content">
               <div class="collapse multi-collapse" id="sum-${index}">
                 <div class="sum-user-note">`;
-      if(order.foodNote.length != 0) {
-        order.foodNote.forEach((note,noteIndex) => {
-          content += `<p id="${note.id}">${note.userName} : ${note.note} </p>`;
+      if(order.foodNote.length !== 0) {
+        order.foodNote.forEach((note) => {
+          if(note.note) {
+            content += `<p id="${note.id}">${note.userName} : ${note.note} </p>`;
+          }
         })
       }
       content += `
@@ -382,6 +389,9 @@ function appendNewOrder(newOrder) {
   orderContainer.appendChild(el);
 }
 
+function checkExistNote(item) {
+  return item.findIndex((x) => x.note !== '')
+}
 function appendUpdatedOrder(updatedOrder) {
   const orderEl = document.getElementById(updatedOrder._id);
   orderEl.querySelector(

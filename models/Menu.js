@@ -23,8 +23,7 @@ const MenuSchema = new mongoose.Schema({
     required: true,
   },
   discountPrice: {
-    type: Number,
-    required: true,
+    type: Number
   },
   description: {
     type: String,

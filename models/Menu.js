@@ -22,6 +22,10 @@ const MenuSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  discountPrice: {
+    type: Number,
+    required: true,
+  },
   description: {
     type: String,
   }

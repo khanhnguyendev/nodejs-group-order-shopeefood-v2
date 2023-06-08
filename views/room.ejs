@@ -89,6 +89,7 @@
                           <h2 id="txtShopName"><%= resName %></h2>
                         </div>
                         <div class="menu-wrapper">
+                          <!-- <p><%= JSON.stringify(foods) %></p> -->
                           <% foods.forEach((food)=> { %>
                           <div class="card btn-border-dark">
                             <img class="card-img-top" src="<%= food.image %>">
@@ -129,6 +130,7 @@
                                       <div class="order-info order-infor-price">
                                         <span class="price-txt">Price: <%=orderDetail.foodPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></span>
                                       </div>
+                                      <i class="fa fa-pencil" aria-hidden="true"></i>
                                       <% if (orderDetail.foodNote) { %>
                                       <div id="order-info-note">
                                         <span class="note-txt"><%= orderDetail.foodNote %></span> 
@@ -159,27 +161,31 @@
                                   <div class="summary-info">
                                     <span class="sum-qty-txt"><%= orderDetail.foodQty %> x </span>
                                     <span class="sum-food-txt"><%= orderDetail.foodTitle %></span>
-                                      <% orderDetail.foodNote.forEach((note, noteIndex) => { %>
-                                        <% if (note.note) { %>
+                                     <!-- <p class="result"><%= orderDetail.foodNote.findIndex((x) => x.note !== '') %></p> -->
+                                      <% if (orderDetail.foodNote.findIndex((x) => x.note !== '') !== -1) { %>
+                                        <% orderDetail.foodNote.forEach((note, noteIndex) => { %>
                                           <% if (noteIndex === 0) { %>
-                                            <div class="note-wrapper">
+                                            <div class="note-wrapper xxxx">
                                               <span>Note: </span>
                                               <div class="btn-primary expand-button"
+                                                title="Bấm dô đi"
                                                 data-bs-toggle="collapse" 
                                                 data-bs-target="<%= '#sum-'+index %>" 
                                                 aria-expanded="false" 
                                                 aria-controls="<%= 'sum-'+index %>">
                                           <% } %>
-                                          <% if (noteIndex > 0) { %>
-                                            ,
+                                          <% if (note.note) { %>
+                                            <% if (noteIndex > orderDetail.foodNote.findIndex((x) => x.note !== '')) { %>
+                                              ,
+                                            <% } %>
+                                            <%= note.userName %>
                                           <% } %>
-                                          <%= note.userName %>
                                           <% if (noteIndex === orderDetail.foodNote.length - 1) { %>
                                           </div>
                                           </div>
                                           <% } %>
-                                        <% } %>
-                                      <% }) %>
+                                        <% }) %>
+                                      <% } %>
                                     
                                   </div>
                                   <div class="sum-total-txt">

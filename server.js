@@ -15,8 +15,8 @@ const OrderSchema = require("./models/Order");
 cron = require("node-cron");
 
 // Use env port or default
-const port = process.env.PORT || 5000;
-const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+const port = process.env.PORT || 3000;
+const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
 
 // TODO: add to config file
 const CONNECTION = "CONNECTION";
@@ -104,11 +104,11 @@ connection.once("open", () => {
 });
 
 //schedule deletion of rooms at midnight
-cron.schedule("0 0 0 * * *", async () => {
-  await connection.collection("rooms").drop();
+// cron.schedule("0 0 0 * * *", async () => {
+//   await connection.collection("rooms").drop();
 
-  io.of("/api/socket").emit("thoughtsCleared");
-});
+//   io.of("/api/socket").emit("thoughtsCleared");
+// });
 
 connection.on("error", (error) => console.log("Error: " + error));
 
@@ -146,6 +146,8 @@ app.get("/profile/:userName", (req, res) => {
   res.render("profile", {userInfo: userInfo});
 })
 
+
+// Create a new room
 app.post("/room", async (req, res) => {
   // Handle url not available
   if (rooms[req.body.orderShopName] != null) {
@@ -153,6 +155,29 @@ app.post("/room", async (req, res) => {
   }
 
   roomName = req.body.orderShopName;
+
+  // Check if room exists already
+  const response = await axios.get(
+    `${baseUrl}/API/getHistoryRoomName?roomName=${roomName}`
+  );
+
+  // Assuming the API responds with an array of room objects, each having a "roomName" field
+  const historyRoomNames = response.data.reply;
+
+  // Check if req.body.orderShopName exists in any of the roomName fields
+  const isOrderShopNameFound = historyRoomNames.some(
+    (room) => room.roomName === roomName
+  );
+
+  if (isOrderShopNameFound) {
+    // If room exists already
+    return res.json({
+      success: false,
+      message:
+        `Room name "${roomName}" already exists. Please choose a new room name!`,
+    });
+  }
+
   rooms[roomName] = { users: {} };
   shopUrl = req.body.orderShopUrl.replace("https://shopeefood.vn/", "");
   let restaurantDes = "";
@@ -231,6 +256,7 @@ app.get("/:room", async (req, res) => {
   if (!room) {
     return res.redirect("/");
   }
+
   const roomName = req.params.room;
 
   // Get room information

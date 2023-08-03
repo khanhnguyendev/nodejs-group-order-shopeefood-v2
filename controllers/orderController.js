@@ -1,4 +1,5 @@
 const OrderSchema = require("../models/Order");
+const RoomSchema = require("../models/Room");
 const MenuSchema = require("../models/Menu");
 
 const getDeliveryInfo = async (req, res) => {
@@ -177,11 +178,31 @@ const getOrder = async (req, res) => {
   }
 };
 
+const getHistoryRoomName = async (req, res) => {
+  try {
+    let roomName = req.query.roomName;
+    const historyRoomName = await RoomSchema.find({ roomName }).select(["-__v"]);
+
+    return res.json({
+      result: 200,
+      reply: historyRoomName,
+    });
+  } catch (error) { 
+    console.log("Error with fetching thoughts: ", error);
+    return res.json({
+      success: false,
+      message:
+        "Error with fetching thoughts. See server console for more info.",
+    });
+  }
+}
+
 module.exports = {
   addOrder,
   getOrder,
   getDeliveryInfo,
   getResInfo,
   getResDishes,
-  getMenuByDeliveryId
+  getMenuByDeliveryId,
+  getHistoryRoomName
 };

@@ -158,7 +158,7 @@ app.post("/room", async (req, res) => {
 
   // Check if room exists already
   const response = await axios.get(
-    `${baseUrl}/API/getHistoryRoomName?roomName=${roomName}`
+    `${baseUrl}/API/findRoomByRoomName?roomName=${roomName}`
   );
 
   // Assuming the API responds with an array of room objects, each having a "roomName" field

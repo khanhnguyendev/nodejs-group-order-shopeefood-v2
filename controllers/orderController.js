@@ -178,14 +178,32 @@ const getOrder = async (req, res) => {
   }
 };
 
-const getHistoryRoomName = async (req, res) => {
+const findRoomByRoomName = async (req, res) => {
   try {
     let roomName = req.query.roomName;
-    const historyRoomName = await RoomSchema.find({ roomName }).select(["-__v"]);
+    const roomInfo = await RoomSchema.find({ roomName }).select(["-__v"]);
 
     return res.json({
       result: 200,
-      reply: historyRoomName,
+      reply: roomInfo,
+    });
+  } catch (error) { 
+    console.log("Error with fetching thoughts: ", error);
+    return res.json({
+      success: false,
+      message:
+        "Error with fetching thoughts. See server console for more info.",
+    });
+  }
+}
+
+const getAllHistoryRoomName = async (req, res) => {
+  try {
+    const historyRooms = await RoomSchema.find({}).select(["-__v"]);
+
+    return res.json({
+      result: 200,
+      reply: historyRooms,
     });
   } catch (error) { 
     console.log("Error with fetching thoughts: ", error);
@@ -204,5 +222,6 @@ module.exports = {
   getResInfo,
   getResDishes,
   getMenuByDeliveryId,
-  getHistoryRoomName
+  findRoomByRoomName,
+  getAllHistoryRoomName
 };

@@ -19,6 +19,7 @@
   },
   "scripts": {
     "dev": "nodemon server.js",
+    "build": "nodejs build --output public",
     "deploy": "node server.js"
   },
   "author": "khanhnguyen@dev",

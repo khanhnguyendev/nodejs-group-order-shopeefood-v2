@@ -98,8 +98,8 @@ function showPopupConfirmOrder(e) {
   // Fill form
   document.getElementById("txtFoodName").innerHTML =
     e.getAttribute("data-title");
-  document.getElementById("txtFoodPrice").innerHTML =
-    e.getAttribute("data-price");
+  document.getElementById("txtFoodPrice").innerHTML = 
+    formatPrice(Number(e.getAttribute("data-price")));
   document.getElementById("txtFoodDes").innerHTML =
     e.getAttribute("data-des").length == 0
       ? `No description`
@@ -377,10 +377,10 @@ function appendNewOrder(newOrder) {
                 ${divFoodNote}
               </div>
               <div class="order-option">
-                <img src="/assets/edit-ico.png" class="edit" alt="edit" 
+                <img src="/assets/edit-ico.png" class="edit-order" alt="edit" 
                 data-id="${newOrder._id}" data-title="${newOrder.foodTitle}" data-price="${newOrder.foodPrice}" data-qty="${newOrder.foodQty}"
                 onclick="showPopupUpdateOrder(this)"">
-                <img src="/assets/delete-ico.png" class="delete" alt="delete" 
+                <img src="/assets/delete-ico.png" class="delete-order" alt="delete" 
                   onclick="confirmDelete(this)" id="${newOrder._id}" 
                   data-room-id="${newOrder.roomId}" data-delivery-id="${newOrder.deliveryId}">
               </div>

@@ -92,13 +92,16 @@
                           <!-- <p><%= JSON.stringify(foods) %></p> -->
                           <% foods.forEach((food)=> { %>
                           <div class="card btn-border-dark">
-                            <img class="card-img-top" src="<%= food.image %>">
+                            <img class="card-img-top" src="<%= food.image %>" alt="Food Image">
                             <div class="card-body-content">
                               <h5 class="card-title"><%= food.title %></h5>
                             </div>
-                            <a onclick="showPopupConfirmOrder(this)" class="btn mt-3 add-to-cart" 
-                              data-title="<%= food.title %>" data-price="<%= food.price %>" data-des="<%= food.des %>">
+                            <div class="discount-price mt-2">
                               <%= food.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %>
+                            </div>
+                            <a onclick="showPopupConfirmOrder(this)" class="btn mt-1 add-to-cart" 
+                              data-title="<%= food.title %>" data-price="<%= food.discountPrice %>" data-des="<%= food.description %>">
+                              <%= food.discountPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %>
                             </a>
                           </div>
                           <% }) %>

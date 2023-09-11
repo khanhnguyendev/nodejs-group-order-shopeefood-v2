@@ -153,11 +153,12 @@
                     <div class="card-body-content">
                       <h5 class="card-title"><%= food.title %></h5>
                     </div>
+                    
+                    <% if (food.discountPrice) { %>
                     <div class="discount-price mt-2">
                       <%= food.price.toLocaleString('vi-VN', { style:
                       'currency', currency: 'VND' }) %>
                     </div>
-                    <% if (food.discountPrice) { %>
                     <a
                       onclick="showPopupConfirmOrder(this)"
                       class="btn mt-1 add-to-cart"
@@ -166,6 +167,17 @@
                       data-des="<%= food.description %>"
                     >
                       <%= food.discountPrice.toLocaleString('vi-VN', { style:
+                      'currency', currency: 'VND' }) %>
+                    </a>
+                    <% }else{ %>
+                      <a
+                      onclick="showPopupConfirmOrder(this)"
+                      class="btn mt-1 add-to-cart"
+                      data-title="<%= food.title %>"
+                      data-price="<%= food.price %>"
+                      data-des="<%= food.description %>"
+                    >
+                      <%= food.price.toLocaleString('vi-VN', { style:
                       'currency', currency: 'VND' }) %>
                     </a>
                     <% } %>

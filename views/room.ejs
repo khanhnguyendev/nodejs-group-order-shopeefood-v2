@@ -1,16 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="stylesheet" href="./css/reset.css">
-    <link rel="stylesheet" href="./css/scrollbar.css">
-    <link rel="stylesheet" href="./css/toastr.min.css">
+    <link rel="stylesheet" href="./css/reset.css" />
+    <link rel="stylesheet" href="./css/scrollbar.css" />
+    <link rel="stylesheet" href="./css/toastr.min.css" />
     <link rel="stylesheet/less" type="text/css" href="./css/style.less" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
-  
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD"
+      crossorigin="anonymous"
+    />
+
     <script defer src="/script/socket.io.js"></script>
     <script defer src="/script/toastr.min.js"></script>
     <script defer src="/script/jquery.js"></script>
@@ -18,48 +23,85 @@
     <script defer src="/script/toastr.min.js"></script>
 
     <script>
-      const roomId = "<%= roomId %>"
-      const roomName = "<%= roomName %>"
-      const deliveryId = "<%= deliveryId %>"
+      const roomId = "<%= roomId %>";
+      const roomName = "<%= roomName %>";
+      const deliveryId = "<%= deliveryId %>";
     </script>
 
     <title>Group Order ShopeeFood</title>
-</head> 
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="tab-container">
-            <div class="tab-wrapper">
-              <menu class="menu">
-                <ul class="nav nav-tabs" id="myTab" role="tablist">
-                  <li class="nav-item" role="presentation">
-                    <button class="menu__item active" title="Menu" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true" style="--bgColorItem: #f54888;">
-                      <svg class="icon" viewBox="0 0 24 24">
-                        <path  d="M6.7,4.8h10.7c0.3,0,0.6,0.2,0.7,0.5l2.8,7.3c0,0.1,0,0.2,0,0.3v5.6c0,0.4-0.4,0.8-0.8,0.8H3.8
-                        C3.4,19.3,3,19,3,18.5v-5.6c0-0.1,0-0.2,0.1-0.3L6,5.3C6.1,5,6.4,4.8,6.7,4.8z"/>
-                        <path  d="M3.4,12.9H8l1.6,2.8h4.9l1.5-2.8h4.6"/>
-                      </svg>
-                    </button>
-                  </li>
-                  <li class="nav-item" role="presentation">
-                    <button class="menu__item" title="Order List" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false" style="--bgColorItem: #4343f5;" >
-                      <svg class="icon" viewBox="0 0 24 24">
-                        <path  d="M3.4,11.9l8.8,4.4l8.4-4.4"/>
-                        <path  d="M3.4,16.2l8.8,4.5l8.4-4.5"/>
-                        <path  d="M3.7,7.8l8.6-4.5l8,4.5l-8,4.3L3.7,7.8z"/>
-                      </svg>
-                    </button>
-                  </li>
-                  <li class="nav-item" role="presentation">
-                    <button class="menu__item" title="Payment Info" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false"  style="--bgColorItem: #e0b115;" > 
-                      <svg class="icon" viewBox="0 0 24 24" >
-                        <path  d="M5.1,3.9h13.9c0.6,0,1.2,0.5,1.2,1.2v13.9c0,0.6-0.5,1.2-1.2,1.2H5.1c-0.6,0-1.2-0.5-1.2-1.2V5.1
-                          C3.9,4.4,4.4,3.9,5.1,3.9z"/>
-                        <path  d="M4.2,9.3h15.6"/>
-                        <path  d="M9.1,9.5v10.3"/>
-                      </svg>
-                    </button>
-                  </li>
-                  <!-- <li class="nav-item" role="presentation" style="display: none">
+      <div class="tab-container">
+        <div class="tab-wrapper">
+          <menu class="menu">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button
+                  class="menu__item active"
+                  title="Menu"
+                  id="home-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#home"
+                  type="button"
+                  role="tab"
+                  aria-controls="home"
+                  aria-selected="true"
+                  style="--bgColorItem: #f54888"
+                >
+                  <svg class="icon" viewBox="0 0 24 24">
+                    <path
+                      d="M6.7,4.8h10.7c0.3,0,0.6,0.2,0.7,0.5l2.8,7.3c0,0.1,0,0.2,0,0.3v5.6c0,0.4-0.4,0.8-0.8,0.8H3.8
+                        C3.4,19.3,3,19,3,18.5v-5.6c0-0.1,0-0.2,0.1-0.3L6,5.3C6.1,5,6.4,4.8,6.7,4.8z"
+                    />
+                    <path d="M3.4,12.9H8l1.6,2.8h4.9l1.5-2.8h4.6" />
+                  </svg>
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  class="menu__item"
+                  title="Order List"
+                  id="profile-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#profile"
+                  type="button"
+                  role="tab"
+                  aria-controls="profile"
+                  aria-selected="false"
+                  style="--bgColorItem: #4343f5"
+                >
+                  <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M3.4,11.9l8.8,4.4l8.4-4.4" />
+                    <path d="M3.4,16.2l8.8,4.5l8.4-4.5" />
+                    <path d="M3.7,7.8l8.6-4.5l8,4.5l-8,4.3L3.7,7.8z" />
+                  </svg>
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  class="menu__item"
+                  title="Payment Info"
+                  id="contact-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#contact"
+                  type="button"
+                  role="tab"
+                  aria-controls="contact"
+                  aria-selected="false"
+                  style="--bgColorItem: #e0b115"
+                >
+                  <svg class="icon" viewBox="0 0 24 24">
+                    <path
+                      d="M5.1,3.9h13.9c0.6,0,1.2,0.5,1.2,1.2v13.9c0,0.6-0.5,1.2-1.2,1.2H5.1c-0.6,0-1.2-0.5-1.2-1.2V5.1
+                          C3.9,4.4,4.4,3.9,5.1,3.9z"
+                    />
+                    <path d="M4.2,9.3h15.6" />
+                    <path d="M9.1,9.5v10.3" />
+                  </svg>
+                </button>
+              </li>
+              <!-- <li class="nav-item" role="presentation" style="display: none">
                     <button class="menu__item" style="--bgColorItem:#65ddb7;">
                       <svg class="icon" viewBox="0 0 24 24" >
                         <path  d="M5.1,3.9h13.9c0.6,0,1.2,0.5,1.2,1.2v13.9c0,0.6-0.5,1.2-1.2,1.2H5.1c-0.6,0-1.2-0.5-1.2-1.2V5.1
@@ -69,238 +111,333 @@
                       </svg>
                     </button>
                   </li> -->
-                  <!-- <div class="menu__border"></div> -->
-                </ul>
-              </menu>
-            
-              <div class="svg-container">
-                <svg viewBox="0 0 202.9 45.5" >
-                  <clipPath id="menu" clipPathUnits="objectBoundingBox" transform="scale(0.0049285362247413 0.021978021978022)">
-                    <path  d="M6.7,45.5c5.7,0.1,14.1-0.4,23.3-4c5.7-2.3,9.9-5,18.1-10.5c10.7-7.1,11.8-9.2,20.6-14.3c5-2.9,9.2-5.2,15.2-7
-                      c7.1-2.1,13.3-2.3,17.6-2.1c4.2-0.2,10.5,0.1,17.6,2.1c6.1,1.8,10.2,4.1,15.2,7c8.8,5,9.9,7.1,20.6,14.3c8.3,5.5,12.4,8.2,18.1,10.5
-                      c9.2,3.6,17.6,4.2,23.3,4H6.7z"/>
-                  </clipPath>
-                </svg>
-              </div>
-                <div class="tab-content" id="myTabContent">
-                    <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
-                      <div class="menu-container">
-                        <div class="title-wrapper">
-                          <h2 id="txtShopName"><%= resName %></h2>
-                        </div>
-                        <div class="menu-wrapper">
-                          <!-- <p><%= JSON.stringify(foods) %></p> -->
-                          <% foods.forEach((food)=> { %>
-                          <div class="card btn-border-dark">
-                            <img class="card-img-top" src="<%= food.image %>" alt="Food Image">
-                            <div class="card-body-content">
-                              <h5 class="card-title"><%= food.title %></h5>
-                            </div>
-                            <div class="discount-price mt-2">
-                              <%= food.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %>
-                            </div>
-                            <a onclick="showPopupConfirmOrder(this)" class="btn mt-1 add-to-cart" 
-                              data-title="<%= food.title %>" data-price="<%= food.discountPrice %>" data-des="<%= food.description %>">
-                              <%= food.discountPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %>
-                            </a>
-                          </div>
-                          <% }) %>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-                      <div class="summary-container">
-                        <div class="summary-left">
-                          <div class="summary-left--wrapper">
-                            <h2 class="order-title">Order List</h2>
-                            <ol class="orders-list" id="display-order">
-                              <% orders.forEach((orderDetail)=> { %>
-                                <li id="<%= orderDetail._id %>">
-  
-                                  <div class="order-detail">
-                                    <img class="user-avatar" alt="User Avatar"
-                                      src="https://haycafe.vn/wp-content/uploads/2022/03/hinh-meo-hai-huoc.jpg">
-                                    <div class="order-text">
-                                      <div class="order-info order-info-name">
-                                        <span class="user-txt"><%= orderDetail.orderUser %></span>
-                                        <span class="order-time-txt"><%= orderDetail.createdTime %></span>
-                                      </div>
-                                      <div class="order-info order-info-title">
-                                        <span class="food-amount-txt"><%= orderDetail.foodQty %></span>
-                                        <span> x </span>
-                                        <span class="order-title-txt"><%= orderDetail.foodTitle %></span>
-                                      </div>
-                                      <div class="order-info order-infor-price">
-                                        <span class="price-txt">Price: <%=orderDetail.foodPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></span>
-                                      </div>
-                                      <i class="fa fa-pencil" aria-hidden="true"></i>
-                                      <% if (orderDetail.foodNote) { %>
-                                      <div id="order-info-note">
-                                        <span class="note-txt"><%= orderDetail.foodNote %></span> 
-                                      </div>
-                                      <% } %>
-                                    </div>
-                                    <div class="order-option">
-                                      <img src="/assets/edit-ico.png" class="edit-order" alt="edit" title="edit" 
-                                        data-id="<%= orderDetail._id %>" data-title="<%= orderDetail.foodTitle %>" data-price="<%= orderDetail.foodPrice %>" data-qty="<%= orderDetail.foodQty %>"
-                                        onclick="showPopupUpdateOrder(this)">
-                                      <img src="/assets/delete-ico.png" class="delete-order" alt="delete" title="delete"
-                                        onclick="confirmDelete(this)" id="<%= orderDetail._id %>" 
-                                        data-room-id="<%= orderDetail.roomId %>" data-delivery-id="<%= orderDetail.deliveryId %>">
-                                    </div>
-                                  </div>
-                                </li>
-                                <% }) %>
-                            </ol>
-                          </div>
-                        </div>
-                        <div class="summary-right">
-                          <div class="summary-right--wrapper">
-                            <h2 class="order-title">Summary Order</h2>
-                            <div class="summary-order-container" id="display-summary">
-                              <% sumOrders.forEach((orderDetail, index)=> { %>
-                              <div class="summary-detail">
-                                <div class="summary-detail--content">
-                                  <div class="summary-info">
-                                    <span class="sum-qty-txt"><%= orderDetail.foodQty %> x </span>
-                                    <span class="sum-food-txt"><%= orderDetail.foodTitle %></span>
-                                     <!-- <p class="result"><%= orderDetail.foodNote.findIndex((x) => x.note !== '') %></p> -->
-                                      <% if (orderDetail.foodNote.findIndex((x) => x.note !== '') !== -1) { %>
-                                        <% orderDetail.foodNote.forEach((note, noteIndex) => { %>
-                                          <% if (noteIndex === 0) { %>
-                                            <div class="note-wrapper xxxx">
-                                              <span>Note: </span>
-                                              <div class="btn-primary expand-button"
-                                                title="Bấm dô đi"
-                                                data-bs-toggle="collapse" 
-                                                data-bs-target="<%= '#sum-'+index %>" 
-                                                aria-expanded="false" 
-                                                aria-controls="<%= 'sum-'+index %>">
-                                          <% } %>
-                                          <% if (note.note) { %>
-                                            <% if (noteIndex > orderDetail.foodNote.findIndex((x) => x.note !== '')) { %>
-                                              ,
-                                            <% } %>
-                                            <%= note.userName %>
-                                          <% } %>
-                                          <% if (noteIndex === orderDetail.foodNote.length - 1) { %>
-                                          </div>
-                                          </div>
-                                          <% } %>
-                                        <% }) %>
-                                      <% } %>
-                                    
-                                  </div>
-                                  <div class="sum-total-txt">
-                                    <span><%= orderDetail.totalPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></span>
-                                  </div>
-                                </div>
-                                <div class="expand-content">
-                                  <div class="collapse multi-collapse" id="<%= 'sum-'+index %>">
-                                    <div class="sum-user-note">
-                                      <% orderDetail.foodNote.forEach((note) => { %>
-                                        <% if (note.note) { %>
-                                        <p><%= note.userName %> : <%= note.note %></p>
-                                        <% } %>
-                                      <% }) %>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                              <% }) %>
-                            </div>
-                            <div class="subtotal-container">
-                              <div class="subtotal-info">
-                                <span id="sub-total-txt" class="subtotal-txt">Subtotal (<%= totalItems %> items)</span>
-                                <span id="total-price-txt" class="subtotal-price-txt"><%= totalPrice %></span>
-                              </div>
-                            </div>
+              <!-- <div class="menu__border"></div> -->
+            </ul>
+          </menu>
 
+          <div class="svg-container">
+            <svg viewBox="0 0 202.9 45.5">
+              <clipPath
+                id="menu"
+                clipPathUnits="objectBoundingBox"
+                transform="scale(0.0049285362247413 0.021978021978022)"
+              >
+                <path
+                  d="M6.7,45.5c5.7,0.1,14.1-0.4,23.3-4c5.7-2.3,9.9-5,18.1-10.5c10.7-7.1,11.8-9.2,20.6-14.3c5-2.9,9.2-5.2,15.2-7
+                      c7.1-2.1,13.3-2.3,17.6-2.1c4.2-0.2,10.5,0.1,17.6,2.1c6.1,1.8,10.2,4.1,15.2,7c8.8,5,9.9,7.1,20.6,14.3c8.3,5.5,12.4,8.2,18.1,10.5
+                      c9.2,3.6,17.6,4.2,23.3,4H6.7z"
+                />
+              </clipPath>
+            </svg>
+          </div>
+          <div class="tab-content" id="myTabContent">
+            <div
+              class="tab-pane fade show active"
+              id="home"
+              role="tabpanel"
+              aria-labelledby="home-tab"
+            >
+              <div class="menu-container">
+                <div class="title-wrapper">
+                  <h2 id="txtShopName"><%= resName %></h2>
+                </div>
+                <div class="menu-wrapper">
+                  <!-- <p><%= JSON.stringify(foods) %></p> -->
+                  <% foods.forEach((food)=> { %>
+                  <div class="card btn-border-dark">
+                    <img
+                      class="card-img-top"
+                      src="<%= food.image %>"
+                      alt="Food Image"
+                    />
+                    <div class="card-body-content">
+                      <h5 class="card-title"><%= food.title %></h5>
+                    </div>
+                    <div class="discount-price mt-2">
+                      <%= food.price.toLocaleString('vi-VN', { style:
+                      'currency', currency: 'VND' }) %>
+                    </div>
+                    <% if (food.discountPrice) { %>
+                    <a
+                      onclick="showPopupConfirmOrder(this)"
+                      class="btn mt-1 add-to-cart"
+                      data-title="<%= food.title %>"
+                      data-price="<%= food.discountPrice %>"
+                      data-des="<%= food.description %>"
+                    >
+                      <%= food.discountPrice.toLocaleString('vi-VN', { style:
+                      'currency', currency: 'VND' }) %>
+                    </a>
+                    <% } %>
+                  </div>
+                  <% }) %>
+                </div>
+              </div>
+            </div>
+            <div
+              class="tab-pane fade"
+              id="profile"
+              role="tabpanel"
+              aria-labelledby="profile-tab"
+            >
+              <div class="summary-container">
+                <div class="summary-left">
+                  <div class="summary-left--wrapper">
+                    <h2 class="order-title">Order List</h2>
+                    <ol class="orders-list" id="display-order">
+                      <% orders.forEach((orderDetail)=> { %>
+                      <li id="<%= orderDetail._id %>">
+                        <div class="order-detail">
+                          <img
+                            class="user-avatar"
+                            alt="User Avatar"
+                            src="https://haycafe.vn/wp-content/uploads/2022/03/hinh-meo-hai-huoc.jpg"
+                          />
+                          <div class="order-text">
+                            <div class="order-info order-info-name">
+                              <span class="user-txt"
+                                ><%= orderDetail.orderUser %></span
+                              >
+                              <span class="order-time-txt"
+                                ><%= orderDetail.createdTime %></span
+                              >
+                            </div>
+                            <div class="order-info order-info-title">
+                              <span class="food-amount-txt"
+                                ><%= orderDetail.foodQty %></span
+                              >
+                              <span> x </span>
+                              <span class="order-title-txt"
+                                ><%= orderDetail.foodTitle %></span
+                              >
+                            </div>
+                            <div class="order-info order-infor-price">
+                              <span class="price-txt"
+                                >Price:
+                                <%=orderDetail.foodPrice.toLocaleString('vi-VN',
+                                { style: 'currency', currency: 'VND' }) %></span
+                              >
+                            </div>
+                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                            <% if (orderDetail.foodNote) { %>
+                            <div id="order-info-note">
+                              <span class="note-txt"
+                                ><%= orderDetail.foodNote %></span
+                              >
+                            </div>
+                            <% } %>
+                          </div>
+                          <div class="order-option">
+                            <img
+                              src="/assets/edit-ico.png"
+                              class="edit-order"
+                              alt="edit"
+                              title="edit"
+                              data-id="<%= orderDetail._id %>"
+                              data-title="<%= orderDetail.foodTitle %>"
+                              data-price="<%= orderDetail.foodPrice %>"
+                              data-qty="<%= orderDetail.foodQty %>"
+                              onclick="showPopupUpdateOrder(this)"
+                            />
+                            <img
+                              src="/assets/delete-ico.png"
+                              class="delete-order"
+                              alt="delete"
+                              title="delete"
+                              onclick="confirmDelete(this)"
+                              id="<%= orderDetail._id %>"
+                              data-room-id="<%= orderDetail.roomId %>"
+                              data-delivery-id="<%= orderDetail.deliveryId %>"
+                            />
                           </div>
                         </div>
-                        
-                      </div>
-                    </div>
-                    <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
-                        <div class="coming-soon">
-                          <img class="card-img-top" src="https://tiengdong.com/wp-content/uploads/www_tiengdong_com-meme-gau-truc-panda-weibo.jpg" alt="Card image cap">
-                          <h2>Coming Soon</h2>
+                      </li>
+                      <% }) %>
+                    </ol>
+                  </div>
+                </div>
+                <div class="summary-right">
+                  <div class="summary-right--wrapper">
+                    <h2 class="order-title">Summary Order</h2>
+                    <div class="summary-order-container" id="display-summary">
+                      <% sumOrders.forEach((orderDetail, index)=> { %>
+                      <div class="summary-detail">
+                        <div class="summary-detail--content">
+                          <div class="summary-info">
+                            <span class="sum-qty-txt"
+                              ><%= orderDetail.foodQty %> x
+                            </span>
+                            <span class="sum-food-txt"
+                              ><%= orderDetail.foodTitle %></span
+                            >
+                            <!-- <p class="result"><%= orderDetail.foodNote.findIndex((x) => x.note !== '') %></p> -->
+                            <% if (orderDetail.foodNote.findIndex((x) => x.note
+                            !== '') !== -1) { %> <%
+                            orderDetail.foodNote.forEach((note, noteIndex) => {
+                            %> <% if (noteIndex === 0) { %>
+                            <div class="note-wrapper xxxx">
+                              <span>Note: </span>
+                              <div
+                                class="btn-primary expand-button"
+                                title="Bấm dô đi"
+                                data-bs-toggle="collapse"
+                                data-bs-target="<%= '#sum-'+index %>"
+                                aria-expanded="false"
+                                aria-controls="<%= 'sum-'+index %>"
+                              >
+                                <% } %> <% if (note.note) { %> <% if (noteIndex
+                                > orderDetail.foodNote.findIndex((x) => x.note
+                                !== '')) { %> , <% } %> <%= note.userName %> <%
+                                } %> <% if (noteIndex ===
+                                orderDetail.foodNote.length - 1) { %>
+                              </div>
+                            </div>
+                            <% } %> <% }) %> <% } %>
+                          </div>
+                          <div class="sum-total-txt">
+                            <span
+                              ><%=
+                              orderDetail.totalPrice.toLocaleString('vi-VN', {
+                              style: 'currency', currency: 'VND' }) %></span
+                            >
+                          </div>
                         </div>
+                        <div class="expand-content">
+                          <div
+                            class="collapse multi-collapse"
+                            id="<%= 'sum-'+index %>"
+                          >
+                            <div class="sum-user-note">
+                              <% orderDetail.foodNote.forEach((note) => { %> <%
+                              if (note.note) { %>
+                              <p><%= note.userName %> : <%= note.note %></p>
+                              <% } %> <% }) %>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <% }) %>
+                    </div>
+                    <div class="subtotal-container">
+                      <div class="subtotal-info">
+                        <span id="sub-total-txt" class="subtotal-txt"
+                          >Subtotal (<%= totalItems %> items)</span
+                        >
+                        <span id="total-price-txt" class="subtotal-price-txt"
+                          ><%= totalPrice %></span
+                        >
+                      </div>
                     </div>
                   </div>
-            </div>
-        </div>
-        
-        <!-- POPUP Define User Name -->
-        <div class="popup" id="popup-username">
-          <div class="popup-username--wrapper">
-            <!-- <h2>What should i call you?</h2> -->
-            <!-- <input id="userName" type="text" placeholder="Your Name" required> -->
-            <!-- <a id="confirmBtn" onclick="confirmUserName()">Yes, please!</a> -->
-            <div class="group-input-name">      
-              <input id="userName" class="input-name-user" title="Nhập tên dôôôôô" type="text" required>
-              <span class="highlight"></span>
-              <span class="bar"></span>
-              <label class="input-name-txt">Your Name</label>
-            </div>
-            <div class="btn-input-name-container">
-              <a id="confirmBtn" onclick="confirmUserName()" class="button-ani button--piyo">
-                <div class="button__wrapper">
-                    <span class="button__text">Yes, please!</span>
                 </div>
-                <div class="characterBox">
-                    <div class="character wakeup">
-                        <div class="character__face"></div>
-                    </div>
-                    <div class="character ">
-                        <div class="character__face"></div>
-                    </div>
-                    <div class="character wakeup">
-                        <div class="character__face"></div>
-                    </div>
-                </div>
-              </a>
+              </div>
+            </div>
+            <div
+              class="tab-pane fade"
+              id="contact"
+              role="tabpanel"
+              aria-labelledby="contact-tab"
+            >
+              <div class="coming-soon">
+                <img
+                  class="card-img-top"
+                  src="https://tiengdong.com/wp-content/uploads/www_tiengdong_com-meme-gau-truc-panda-weibo.jpg"
+                  alt="Card image cap"
+                />
+                <h2>Coming Soon</h2>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- POPUP Define User Name -->
+      <div class="popup" id="popup-username">
+        <div class="popup-username--wrapper">
+          <!-- <h2>What should i call you?</h2> -->
+          <!-- <input id="userName" type="text" placeholder="Your Name" required> -->
+          <!-- <a id="confirmBtn" onclick="confirmUserName()">Yes, please!</a> -->
+          <div class="group-input-name">
+            <input
+              id="userName"
+              class="input-name-user"
+              title="Nhập tên dôôôôô"
+              type="text"
+              required
+            />
+            <span class="highlight"></span>
+            <span class="bar"></span>
+            <label class="input-name-txt">Your Name</label>
+          </div>
+          <div class="btn-input-name-container">
+            <a
+              id="confirmBtn"
+              onclick="confirmUserName()"
+              class="button-ani button--piyo"
+            >
+              <div class="button__wrapper">
+                <span class="button__text">Yes, please!</span>
+              </div>
+              <div class="characterBox">
+                <div class="character wakeup">
+                  <div class="character__face"></div>
+                </div>
+                <div class="character">
+                  <div class="character__face"></div>
+                </div>
+                <div class="character wakeup">
+                  <div class="character__face"></div>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="modal-container">
       <!-- POPUP Confirm Order -->
-      <div class="popup-confirm" id="popup-confirm" style="display: none;">
+      <div class="popup-confirm" id="popup-confirm" style="display: none">
         <span id="popup-confirm-title">Confirm your order</span>
         <div class="popup-confirm-info">
           <p id="txtFoodName" type="text" disabled placeholder="Food Name"></p>
           <p id="txtFoodPrice" type="text" disabled placeholder="Price"></p>
           <p id="txtFoodDes" type="text" disabled placeholder="Description"></p>
         </div>
-        <input id="txtFoodQty" type="number" min="0" max="100" value="1">
-        <input id="txtNote" type="text" placeholder="Note">
+        <input id="txtFoodQty" type="number" min="0" max="100" value="1" />
+        <input id="txtNote" type="text" placeholder="Note" />
         <div class="popup-confirm-btn">
-          <button id="orderCloseBtn" onclick="closePopupConfirmOrder()">Close</button>
+          <button id="orderCloseBtn" onclick="closePopupConfirmOrder()">
+            Close
+          </button>
           <button id="orderConfirmBtn" onclick="sendOrder()">Order</button>
         </div>
       </div>
 
-      
       <!-- POPUP Update Order -->
-      <div class="popup-confirm" id="popup-update" style="display: none;">
+      <div class="popup-confirm" id="popup-update" style="display: none">
         <span id="popup-confirm-title">Update your order</span>
         <div class="popup-confirm-info">
           <p id="uptFoodName" type="text" disabled placeholder="Food Name"></p>
           <p id="uptFoodPrice" type="text" disabled placeholder="Price"></p>
         </div>
-        <input id="uptFoodQty" type="number" min="0" max="100" value="1">
-        <input id="uptFoodNote" type="text" placeholder="Note">
-        <input id="orderId" type="hidden" value="">
+        <input id="uptFoodQty" type="number" min="0" max="100" value="1" />
+        <input id="uptFoodNote" type="text" placeholder="Note" />
+        <input id="orderId" type="hidden" value="" />
         <div class="popup-confirm-btn">
-          <button id="orderCloseBtn" onclick="closePopupUpdateOrder()">Close</button>
+          <button id="orderCloseBtn" onclick="closePopupUpdateOrder()">
+            Close
+          </button>
           <button id="orderConfirmBtn" onclick="updateOrder()">Update</button>
         </div>
       </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/less" ></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/less"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+      crossorigin="anonymous"
+    ></script>
+  </body>
 </html>

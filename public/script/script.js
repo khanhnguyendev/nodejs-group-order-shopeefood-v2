@@ -45,6 +45,7 @@ function sendOrder() {
     orderUser: userName,
     shopName: document.getElementById("txtShopName").innerText,
     foodTitle: document.getElementById("txtFoodName").innerText,
+    foodImage: document.getElementById("txtFoodImage").innerText,
     foodPrice: document.getElementById("txtFoodPrice").innerText,
     orderTime: getCurrentTime(),
     foodQty: document.getElementById("txtFoodQty").value,
@@ -69,11 +70,10 @@ function updateOrder() {
   const orderDetail = {
     roomName: roomName,
     orderUser: userName,
-    orderId : document.getElementById("orderId").value,
+    orderId: document.getElementById("orderId").value,
     orderTime: getCurrentTime(),
     foodQty: document.getElementById("uptFoodQty").value,
     foodNote: document.getElementById("uptFoodNote").value,
-
   };
   socket.emit("update", orderDetail);
   closePopupUpdateOrder();
@@ -98,12 +98,15 @@ function showPopupConfirmOrder(e) {
   // Fill form
   document.getElementById("txtFoodName").innerHTML =
     e.getAttribute("data-title");
-  document.getElementById("txtFoodPrice").innerHTML = 
-    formatPrice(Number(e.getAttribute("data-price")));
+  document.getElementById("txtFoodPrice").innerHTML = formatPrice(
+    Number(e.getAttribute("data-price"))
+  );
   document.getElementById("txtFoodDes").innerHTML =
     e.getAttribute("data-des").length == 0
       ? `No description`
       : e.getAttribute("data-des");
+  document.getElementById("txtFoodImage").innerHTML =
+    e.getAttribute("data-image");
 }
 
 // Popup update order
@@ -116,8 +119,7 @@ function showPopupUpdateOrder(e) {
     e.getAttribute("data-title");
   document.getElementById("uptFoodPrice").innerHTML =
     e.getAttribute("data-price");
-    document.getElementById("orderId").value =
-      e.getAttribute("data-id");
+  document.getElementById("orderId").value = e.getAttribute("data-id");
 }
 
 function closePopupConfirmOrder() {
@@ -137,7 +139,6 @@ function closePopupUpdateOrder() {
     .classList.remove("open");
   document.getElementById("popup-update").style.display = "none";
 }
-
 
 // Listen for new order
 socket.on("new-order", async (orderResult) => {
@@ -242,37 +243,39 @@ async function updateSummary() {
     let orders = data.reply;
 
     const summaryOrders = orders.reduce((acc, curr) => {
-      const existing = acc.find(item => item.foodTitle === curr.foodTitle);
-      
+      const existing = acc.find((item) => item.foodTitle === curr.foodTitle);
+
       if (existing) {
         existing.foodQty += curr.foodQty;
         existing.totalPrice += curr.foodPrice;
         existing.foodNote.push({
           userName: curr.orderUser,
           note: curr.foodNote,
-          id: curr._id
+          id: curr._id,
         });
       } else {
         acc.push({
           foodTitle: curr.foodTitle,
-          foodNote: [{
-            userName: curr.orderUser,
-            note: curr.foodNote,
-            id: curr._id
-          }],
+          foodNote: [
+            {
+              userName: curr.orderUser,
+              note: curr.foodNote,
+              id: curr._id,
+            },
+          ],
           foodQty: curr.foodQty,
-          totalPrice: curr.foodPrice
+          totalPrice: curr.foodPrice,
         });
       }
-      
+
       return acc;
     }, []);
 
-    summaryOrders.forEach((order,index) => {
+    summaryOrders.forEach((order, index) => {
       const el = document.createElement("div");
       el.classList.add("summary-detail");
       let noteIndex = this.checkExistNote(order.foodNote);
-      let content='';
+      let content = "";
       content = `
       <div class="summary-detail">
         <div class="summary-detail--content">
@@ -280,47 +283,47 @@ async function updateSummary() {
               <span class="sum-qty-txt">${order.foodQty}</span>
               <span class="sum-food-txt">${order.foodTitle}</span>
               `;
-        if(noteIndex !== -1) {
-          order.foodNote.forEach((note,index) => {
-            if (index === 0) {
-              content += `
+      if (noteIndex !== -1) {
+        order.foodNote.forEach((note, index) => {
+          if (index === 0) {
+            content += `
                 <div class="note-wrapper"
-                  <span>Note: </span>`
-              content += `<div class="btn-primary expand-button"
+                  <span>Note: </span>`;
+            content += `<div class="btn-primary expand-button"
                 data-bs-toggle="collapse" 
                 data-bs-target="#sum-${index}" 
                 aria-expanded="false" 
-                aria-controls="sum-${index}">`
+                aria-controls="sum-${index}">`;
+          }
+          if (note.note) {
+            if (index > noteIndex) {
+              content += ",";
             }
-            if(note.note) {
-              if(index > noteIndex) {
-                content += ','
-              }
-              content += `${note.userName}`;
-            }
-            
-            if (index === order.foodNote.length - 1){
-              content += `</div></div>`
-            }
-          })
-        }
-      
+            content += `${note.userName}`;
+          }
+
+          if (index === order.foodNote.length - 1) {
+            content += `</div></div>`;
+          }
+        });
+      }
+
       content += `
                 </div>
                 <div class="sum-total-txt">
                   <span>${formatPrice(order.totalPrice)}</span>
                 </div>
-              </div>`
+              </div>`;
       content += `
             <div class="expand-content">
               <div class="collapse multi-collapse" id="sum-${index}">
                 <div class="sum-user-note">`;
-      if(order.foodNote.length !== 0) {
+      if (order.foodNote.length !== 0) {
         order.foodNote.forEach((note) => {
-          if(note.note) {
+          if (note.note) {
             content += `<p id="${note.id}">${note.userName} : ${note.note} </p>`;
           }
-        })
+        });
       }
       content += `
             </div>
@@ -360,7 +363,7 @@ function appendNewOrder(newOrder) {
   el.innerHTML = `
             <div class="order-detail">
               <img class="user-avatar" alt="User Avatar"
-                src="https://haycafe.vn/wp-content/uploads/2022/03/hinh-meo-hai-huoc.jpg">
+                src="${newOrder.foodImage}">
               <div class="order-text">
                 <div class="order-info order-info-name">
                   <span class="user-txt">${newOrder.orderUser}</span>
@@ -372,17 +375,23 @@ function appendNewOrder(newOrder) {
                   <span class="order-title-txt">${newOrder.foodTitle}</span>
                 </div>
                 <div class="order-info order-infor-price">
-                  <span class="price-txt">Price: ${formatPrice(newOrder.foodPrice)}</span>
+                  <span class="price-txt">Price: ${formatPrice(
+                    newOrder.foodPrice
+                  )}</span>
                 </div>
                 ${divFoodNote}
               </div>
               <div class="order-option">
                 <img src="/assets/edit-ico.png" class="edit-order" alt="edit" 
-                data-id="${newOrder._id}" data-title="${newOrder.foodTitle}" data-price="${newOrder.foodPrice}" data-qty="${newOrder.foodQty}"
+                data-id="${newOrder._id}" data-title="${
+    newOrder.foodTitle
+  }" data-price="${newOrder.foodPrice}" data-qty="${newOrder.foodQty}"
                 onclick="showPopupUpdateOrder(this)"">
                 <img src="/assets/delete-ico.png" class="delete-order" alt="delete" 
                   onclick="confirmDelete(this)" id="${newOrder._id}" 
-                  data-room-id="${newOrder.roomId}" data-delivery-id="${newOrder.deliveryId}">
+                  data-room-id="${newOrder.roomId}" data-delivery-id="${
+    newOrder.deliveryId
+  }">
               </div>
             </div>
         `;
@@ -390,7 +399,7 @@ function appendNewOrder(newOrder) {
 }
 
 function checkExistNote(item) {
-  return item.findIndex((x) => x.note !== '')
+  return item.findIndex((x) => x.note !== "");
 }
 function appendUpdatedOrder(updatedOrder) {
   const orderEl = document.getElementById(updatedOrder._id);
@@ -398,9 +407,7 @@ function appendUpdatedOrder(updatedOrder) {
     ".food-amount-txt"
   ).innerHTML = `${updatedOrder.foodQty}`;
   if (updatedOrder.foodNote) {
-    orderEl.querySelector(
-      ".note-txt"
-    ).innerHTML = `${updatedOrder.foodNote}`;
+    orderEl.querySelector(".note-txt").innerHTML = `${updatedOrder.foodNote}`;
   }
 }
 
@@ -413,39 +420,37 @@ if (cookieUserName == null || cookieUserName.length < 1) {
 }
 
 function confirmUserName() {
-  const maxLengthName = 25
-  let name = txtuserName.value.length
-  if(txtuserName.validity.valid && name <= maxLengthName) {
-    const errorMsg = document.querySelector('.error');
-    if(errorMsg) {
+  const maxLengthName = 25;
+  let name = txtuserName.value.length;
+  if (txtuserName.validity.valid && name <= maxLengthName) {
+    const errorMsg = document.querySelector(".error");
+    if (errorMsg) {
       errorMsg.remove();
     }
     userName = txtuserName.value;
     document.getElementById("popup-username").classList.remove("open");
     setCookie("userName", userName, 1);
     socket.emit("new-user", roomName, userName);
-    notify(
-      TOASTR_SUCCESS,
-      `Hé lô ${userName}`
-    );
-  }else {
+    notify(TOASTR_SUCCESS, `Hé lô ${userName}`);
+  } else {
     const errorElement = document.createElement("span");
     errorElement.classList.add("error");
     let errorMessage = "";
-    if(name > maxLengthName) {
+    if (name > maxLengthName) {
       errorMessage = "Tên gì mà dài thòng. Nhập lại đi";
     }
-    if(!txtuserName.validity.valid) {
+    if (!txtuserName.validity.valid) {
       errorMessage = "Nhập tên dôôôôôô";
     }
     errorElement.innerHTML = errorMessage;
-    let inputNameError = document.querySelector('.group-input-name').querySelector('.error')
-    if(inputNameError) {
-      inputNameError.innerHTML = errorMessage
-    }else {
-      document.querySelector('.group-input-name').append(errorElement);
+    let inputNameError = document
+      .querySelector(".group-input-name")
+      .querySelector(".error");
+    if (inputNameError) {
+      inputNameError.innerHTML = errorMessage;
+    } else {
+      document.querySelector(".group-input-name").append(errorElement);
     }
-    
   }
 }
 
@@ -541,7 +546,7 @@ menuItems.forEach((item, index) => {
 });
 
 function formatPrice(value) {
-  return value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
+  return value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
 }
 
 window.addEventListener("resize", () => {
@@ -552,4 +557,3 @@ window.addEventListener("load", () => {
   body.style.backgroundColor = bgColorsBody[0];
   body.style.backdropFilter = "brightness(90%)";
 });
-

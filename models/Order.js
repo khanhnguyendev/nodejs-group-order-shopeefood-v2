@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema({
   roomId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Room',
-    required: true
+    ref: "Room",
+    required: true,
   },
   deliveryId: {
     type: String,
@@ -12,35 +12,39 @@ const orderSchema = new mongoose.Schema({
   },
   orderUser: {
     type: String,
-    required: true
+    required: true,
   },
   ipUser: {
     type: String,
-    required: true
+    required: true,
   },
   foodTitle: {
     type: String,
-    required: true
+    required: true,
+  },
+  foodImage: {
+    type: String,
+    required: true,
   },
   foodPrice: {
     type: Number,
-    required: true
+    required: true,
   },
   foodQty: {
     type: Number,
-    required: true
+    required: true,
   },
   foodNote: String,
   createdTime: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   updatedTime: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-const Order = mongoose.model('Order', orderSchema);
+const Order = mongoose.model("Order", orderSchema);
 
 module.exports = Order;

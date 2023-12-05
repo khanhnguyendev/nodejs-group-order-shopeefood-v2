@@ -41,12 +41,16 @@ server.listen(port, () => {
 });
 
 //connect to db
-mongoose.connect(process.env.DB_URI || require("./config/config").db.uri, {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useUnifiedTopology: true,
-  useFindAndModify: false,
-});
+mongoose.connect(
+  process.env.DB_URI ||
+    "mongodb+srv://khanhnguyendev:Khanhnguyen97@groupordershopeefood.gjgtfwr.mongodb.net/dev-groupordershopee?retryWrites=true&w=majority",
+  {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+  }
+);
 
 const connection = mongoose.connection;
 
@@ -66,6 +70,7 @@ connection.once("open", () => {
           orderUser: change.fullDocument.orderUser,
           ipUser: change.fullDocument.ipUser,
           foodTitle: change.fullDocument.foodTitle,
+          foodImage: change.fullDocument.foodImage,
           foodPrice: change.fullDocument.foodPrice,
           foodQty: change.fullDocument.foodQty,
           foodNote: change.fullDocument.foodNote,
@@ -141,11 +146,10 @@ app.get("/", (req, res) => {
 });
 
 app.get("/profile/:userName", (req, res) => {
-  let userInfo = {}
-  userInfo.name = "Test"
-  res.render("profile", {userInfo: userInfo});
-})
-
+  let userInfo = {};
+  userInfo.name = "Test";
+  res.render("profile", { userInfo: userInfo });
+});
 
 // Create a new room
 app.post("/room", async (req, res) => {
@@ -173,8 +177,7 @@ app.post("/room", async (req, res) => {
     // If room exists already
     return res.json({
       success: false,
-      message:
-        `Room name "${roomName}" already exists. Please choose a new room name!`,
+      message: `Room name "${roomName}" already exists. Please choose a new room name!`,
     });
   }
 
@@ -349,6 +352,7 @@ io.on("connection", (socket) => {
 
     let orderUser = orderReq.orderUser;
     let foodTitle = orderReq.foodTitle;
+    let foodImage = orderReq.foodImage;
     let foodPrice = priceParser(orderReq.foodPrice);
     let foodQty = parseInt(orderReq.foodQty);
     let foodNote = orderReq.foodNote;
@@ -357,17 +361,6 @@ io.on("connection", (socket) => {
       `Order from ${orderUser}@${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`
     );
 
-    // TODO validate order request
-    // if (foodTitle) {
-    //   let updatedResult = {};
-    //   updatedResult.status = UNAVAILABLE_VALUE;
-    //   updatedResult.updatedOrder = orderReq;
-
-    //   console.log(`Cannot send order. Food is invalid : ${foodTitle}`);
-
-    //   return io.emit("update-order", updatedResult);
-    // }
-
     try {
       const newOrder = new OrderSchema({
         roomId: roomId,
@@ -375,6 +368,7 @@ io.on("connection", (socket) => {
         orderUser: orderUser,
         ipUser: clientIp,
         foodTitle: foodTitle,
+        foodImage: foodImage,
         foodPrice: foodPrice,
         foodQty: foodQty,
         foodNote: foodNote,
@@ -386,6 +380,10 @@ io.on("connection", (socket) => {
 
       console.log(`New order created: \n ${JSON.stringify(newOrder)}`);
     } catch (error) {
+      let orderResult = {};
+      orderResult.status = ERROR;
+      orderResult.newOrder = orderReq;
+      io.emit("new-order", orderResult);
       console.log("Error with creating order:", error);
     }
   });
@@ -410,8 +408,14 @@ io.on("connection", (socket) => {
       // Check if there is an existing order with the same roomId, deliveryId, orderId
       let historyOrder = await OrderSchema.findById(orderId);
 
-      if (!historyOrder || historyOrder.orderUser != orderUser || historyOrder.ipUser != clientIp) {
-        console.log(`User ${orderUser}@${clientIp} permission denied\nOrderId: ${historyOrder._id}`);
+      if (
+        !historyOrder ||
+        historyOrder.orderUser != orderUser ||
+        historyOrder.ipUser != clientIp
+      ) {
+        console.log(
+          `User ${orderUser}@${clientIp} permission denied\nOrderId: ${historyOrder._id}`
+        );
         let updatedResult = {};
         updatedResult.status = PERMISSION_DENIED;
         updatedResult.updatedOrder = orderReq;

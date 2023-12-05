@@ -41,16 +41,12 @@ server.listen(port, () => {
 });
 
 //connect to db
-mongoose.connect(
-  process.env.DB_URI ||
-    "mongodb+srv://khanhnguyendev:Khanhnguyen97@groupordershopeefood.gjgtfwr.mongodb.net/dev-groupordershopee?retryWrites=true&w=majority",
-  {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-  }
-);
+mongoose.connect(process.env.DB_URI, {
+  useNewUrlParser: true,
+  useCreateIndex: true,
+  useUnifiedTopology: true,
+  useFindAndModify: false,
+});
 
 const connection = mongoose.connection;
 

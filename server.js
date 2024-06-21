@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express"),
   mongoose = require("mongoose"),
   bodyParser = require("body-parser"),
@@ -53,7 +54,7 @@ const connection = mongoose.connection;
 connection.once("open", () => {
   console.log("MongoDB database connected");
 
-  console.log("Setting change streams");
+  console.log("Setting change streams for orders collection...");
   const thoughtChangeStream = connection.collection("orders").watch();
 
   thoughtChangeStream.on("change", async (change) => {

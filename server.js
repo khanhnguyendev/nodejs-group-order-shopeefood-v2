@@ -271,21 +271,16 @@ io.on("connection", (socket) => {
 
   // Order API
   socket.on("order", async (orderReq) => {
-    let clientIp = socket.request.connection.remoteAddress.replace(
-      "::ffff:",
-      ""
-    );
-    let orderResult = {};
-
-    let orderUser = orderReq.orderUser;
-    let foodTitle = orderReq.foodTitle;
-    let foodImage = orderReq.foodImage;
+    const orderUser = orderReq.orderUser;
+    const sessionId = orderReq.sessionId;
+    const foodTitle = orderReq.foodTitle;
+    const foodImage = orderReq.foodImage;
     let foodPrice = priceParser(orderReq.foodPrice);
     let foodQty = parseInt(orderReq.foodQty);
-    let foodNote = orderReq.foodNote;
+    const foodNote = orderReq.foodNote;
 
     console.log(
-      `Order from ${orderUser}@${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`
+      `Order from ${orderUser}@${sessionId} to ${orderReq.roomName}@${orderReq.shopName}`
     );
 
     try {
@@ -293,7 +288,7 @@ io.on("connection", (socket) => {
         roomId: roomId,
         deliveryId: deliveryId,
         orderUser: orderUser,
-        ipUser: clientIp,
+        sessionId: sessionId,
         foodTitle: foodTitle,
         foodImage: foodImage,
         foodPrice: foodPrice,
@@ -317,10 +312,7 @@ io.on("connection", (socket) => {
 
   // Update API
   socket.on("update", async (orderReq) => {
-    let clientIp = socket.request.connection.remoteAddress.replace(
-      "::ffff:",
-      ""
-    );
+    const sessionId = orderReq.sessionId;
 
     let orderUser = orderReq.orderUser;
     let orderId = orderReq.orderId;
@@ -328,7 +320,7 @@ io.on("connection", (socket) => {
     let foodNote = orderReq.foodNote;
 
     console.log(
-      `Update order from ${orderUser}@${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`
+      `Update order from ${orderUser}@${sessionId} to ${orderReq.roomName}@${orderReq.shopName}`
     );
 
     try {
@@ -338,10 +330,10 @@ io.on("connection", (socket) => {
       if (
         !historyOrder ||
         historyOrder.orderUser != orderUser ||
-        historyOrder.ipUser != clientIp
+        historyOrder.sessionId != sessionId
       ) {
         console.log(
-          `User ${orderUser}@${clientIp} permission denied\nOrderId: ${historyOrder._id}`
+          `User ${orderUser}@${sessionId} permission denied\nOrderId: ${historyOrder._id}`
         );
         let updatedResult = {};
         updatedResult.status = PERMISSION_DENIED;
@@ -377,10 +369,8 @@ io.on("connection", (socket) => {
 
   // Delete API
   socket.on("delete", async (deletedReq) => {
-    let clientIp = socket.request.connection.remoteAddress.replace(
-      "::ffff:",
-      ""
-    );
+    const sessionId = orderReq.sessionId;
+
     let roomId = deletedReq.roomId;
     let deliveryId = deletedReq.deliveryId;
     let deletedUser = deletedReq.deleteUser;
@@ -392,14 +382,18 @@ io.on("connection", (socket) => {
     }
 
     console.log(
-      `Delete order from ${deletedUser}@${clientIp} to ${room.roomName}@${room.shopName}`
+      `Delete order from ${deletedUser}@${sessionId} to ${room.roomName}@${room.shopName}`
     );
 
     let order = await OrderSchema.findOne({ _id: deletedReq.orderId });
 
-    if (!order || order.orderUser != deletedUser || order.ipUser != clientIp) {
+    if (
+      !order ||
+      order.orderUser != deletedUser ||
+      order.sessionId != sessionId
+    ) {
       console.log(
-        `User ${deletedUser}@${clientIp} permission denied: \nOrderId`,
+        `User ${deletedUser}@${sessionId} permission denied: \nOrderId`,
         deletedReq.orderId
       );
       let deleteResult = {};

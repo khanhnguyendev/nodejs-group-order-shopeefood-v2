@@ -1,19 +1,20 @@
 require("dotenv").config();
 const express = require("express"),
-  mongoose = require("mongoose"),
   bodyParser = require("body-parser"),
-  orderRoutes = require("./routes/orderRoutes"),
   cors = require("cors"),
-  fs = require("fs"),
   axios = require("axios");
+
+(morgan = require("morgan")), (path = require("path"));
+cron = require("node-cron");
 
 const RoomSchema = require("./models/Room");
 const MenuSchema = require("./models/Menu");
 const OrderSchema = require("./models/Order");
-
-(morgan = require("morgan")), (path = require("path"));
-
-cron = require("node-cron");
+const router = require("./routes/routes");
+const connectDB = require("./config/db");
+const { calTotalPrice, priceParser } = require("./utils/priceUtil");
+const { fetchMenuByDeliveryId, fetchUserInRooms } = require("./utils/fetcher");
+const logWriter = require("./utils/logWriter");
 
 // Use env port or default
 const port = process.env.PORT || 3000;
@@ -35,84 +36,10 @@ const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server);
 
-//start the server
-server.listen(port, () => {
-  console.log(`Server now running on port ${port}!`);
-  console.log(`http://localhost:${port}`);
-});
+global.io = io;
 
-//connect to db
-mongoose.connect(process.env.DB_URI, {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useUnifiedTopology: true,
-  useFindAndModify: false,
-});
-
-const connection = mongoose.connection;
-
-connection.once("open", () => {
-  console.log("MongoDB database connected");
-
-  console.log("Setting change streams for orders collection...");
-  const thoughtChangeStream = connection.collection("orders").watch();
-
-  thoughtChangeStream.on("change", async (change) => {
-    switch (change.operationType) {
-      case "insert":
-        const newOrder = {
-          _id: change.fullDocument._id,
-          roomId: change.fullDocument.roomId,
-          deliveryId: change.fullDocument.deliveryId,
-          orderUser: change.fullDocument.orderUser,
-          ipUser: change.fullDocument.ipUser,
-          foodTitle: change.fullDocument.foodTitle,
-          foodImage: change.fullDocument.foodImage,
-          foodPrice: change.fullDocument.foodPrice,
-          foodQty: change.fullDocument.foodQty,
-          foodNote: change.fullDocument.foodNote,
-          createdTime: change.fullDocument.createdTime,
-          updatedTime: change.fullDocument.updatedTime,
-        };
-
-        let orderResult = {};
-        orderResult.status = SUCCESS;
-        orderResult.newOrder = newOrder;
-
-        console.log(`Mongoose successfully created ${change.documentKey._id}`);
-
-        io.emit("new-order", orderResult);
-        break;
-
-      case "update":
-        const updatedOrder = await OrderSchema.find({
-          _id: change.documentKey._id,
-        }).select(["-__v"]);
-
-        let updatedResult = {};
-        updatedResult.status = SUCCESS;
-        updatedResult.updatedOrder = updatedOrder[0];
-
-        console.log(`Mongoose successfully updated ${change.documentKey._id}`);
-
-        io.emit("update-order", updatedResult);
-        break;
-
-      case "delete":
-        console.log(`Mongoose successfully deleted ${change.documentKey._id}`);
-        break;
-    }
-  });
-});
-
-//schedule deletion of rooms at midnight
-// cron.schedule("0 0 0 * * *", async () => {
-//   await connection.collection("rooms").drop();
-
-//   io.of("/api/socket").emit("thoughtsCleared");
-// });
-
-connection.on("error", (error) => console.log("Error: " + error));
+// Connect to the database
+connectDB();
 
 app.use(cors());
 
@@ -136,9 +63,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 //add routers
-app.use("/api/", orderRoutes);
+app.use("/api/", router);
 
 app.get("/", (req, res) => {
+  const clientIp = req.ip;
+  console.log(`Client IP: ${clientIp} connected`);
   res.render("index", { rooms: rooms });
 });
 
@@ -342,20 +271,16 @@ io.on("connection", (socket) => {
 
   // Order API
   socket.on("order", async (orderReq) => {
-    let clientIp = socket.request.connection.remoteAddress.replace(
-      "::ffff:",
-      ""
-    );
-
-    let orderUser = orderReq.orderUser;
-    let foodTitle = orderReq.foodTitle;
-    let foodImage = orderReq.foodImage;
+    const orderUser = orderReq.orderUser;
+    const sessionId = orderReq.sessionId;
+    const foodTitle = orderReq.foodTitle;
+    const foodImage = orderReq.foodImage;
     let foodPrice = priceParser(orderReq.foodPrice);
     let foodQty = parseInt(orderReq.foodQty);
-    let foodNote = orderReq.foodNote;
+    const foodNote = orderReq.foodNote;
 
     console.log(
-      `Order from ${orderUser}@${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`
+      `Order from ${orderUser}@${sessionId} to ${orderReq.roomName}@${orderReq.shopName}`
     );
 
     try {
@@ -363,7 +288,7 @@ io.on("connection", (socket) => {
         roomId: roomId,
         deliveryId: deliveryId,
         orderUser: orderUser,
-        ipUser: clientIp,
+        sessionId: sessionId,
         foodTitle: foodTitle,
         foodImage: foodImage,
         foodPrice: foodPrice,
@@ -387,10 +312,7 @@ io.on("connection", (socket) => {
 
   // Update API
   socket.on("update", async (orderReq) => {
-    let clientIp = socket.request.connection.remoteAddress.replace(
-      "::ffff:",
-      ""
-    );
+    const sessionId = orderReq.sessionId;
 
     let orderUser = orderReq.orderUser;
     let orderId = orderReq.orderId;
@@ -398,7 +320,7 @@ io.on("connection", (socket) => {
     let foodNote = orderReq.foodNote;
 
     console.log(
-      `Update order from ${orderUser}@${clientIp} to ${orderReq.roomName}@${orderReq.shopName}`
+      `Update order from ${orderUser}@${sessionId} to ${orderReq.roomName}@${orderReq.shopName}`
     );
 
     try {
@@ -408,10 +330,10 @@ io.on("connection", (socket) => {
       if (
         !historyOrder ||
         historyOrder.orderUser != orderUser ||
-        historyOrder.ipUser != clientIp
+        historyOrder.sessionId != sessionId
       ) {
         console.log(
-          `User ${orderUser}@${clientIp} permission denied\nOrderId: ${historyOrder._id}`
+          `User ${orderUser}@${sessionId} permission denied\nOrderId: ${historyOrder._id}`
         );
         let updatedResult = {};
         updatedResult.status = PERMISSION_DENIED;
@@ -447,10 +369,8 @@ io.on("connection", (socket) => {
 
   // Delete API
   socket.on("delete", async (deletedReq) => {
-    let clientIp = socket.request.connection.remoteAddress.replace(
-      "::ffff:",
-      ""
-    );
+    const sessionId = orderReq.sessionId;
+
     let roomId = deletedReq.roomId;
     let deliveryId = deletedReq.deliveryId;
     let deletedUser = deletedReq.deleteUser;
@@ -462,14 +382,18 @@ io.on("connection", (socket) => {
     }
 
     console.log(
-      `Delete order from ${deletedUser}@${clientIp} to ${room.roomName}@${room.shopName}`
+      `Delete order from ${deletedUser}@${sessionId} to ${room.roomName}@${room.shopName}`
     );
 
     let order = await OrderSchema.findOne({ _id: deletedReq.orderId });
 
-    if (!order || order.orderUser != deletedUser || order.ipUser != clientIp) {
+    if (
+      !order ||
+      order.orderUser != deletedUser ||
+      order.sessionId != sessionId
+    ) {
       console.log(
-        `User ${deletedUser}@${clientIp} permission denied: \nOrderId`,
+        `User ${deletedUser}@${sessionId} permission denied: \nOrderId`,
         deletedReq.orderId
       );
       let deleteResult = {};
@@ -534,11 +458,6 @@ function summaryOrders(ordersJson) {
   return summary;
 }
 
-// String price to int
-function priceParser(strPrice) {
-  return parseInt(strPrice.replace(/[^\d]/g, ""));
-}
-
 // Get user in room
 function getUserRooms(socket) {
   return Object.entries(rooms).reduce((names, [name, room]) => {
@@ -547,39 +466,8 @@ function getUserRooms(socket) {
   }, []);
 }
 
-// Log Writer
-function logWriter(type, message) {
-  console.log(getDateTime() + " " + type + "] " + message);
-}
-
-// Get current date time
-function getDateTime() {
-  var currentDate = new Date();
-  return (
-    "[" +
-    String(currentDate.getDate()).padStart(2, "0") +
-    "/" +
-    String(currentDate.getMonth() + 1).padStart(2, "0") +
-    "/" +
-    currentDate.getFullYear() +
-    " @ " +
-    String(currentDate.getHours()).padStart(2, "0") +
-    ":" +
-    String(currentDate.getMinutes()).padStart(2, "0") +
-    ":" +
-    String(currentDate.getSeconds()).padStart(2, "0")
-  );
-}
-
-function calTotalPrice(ordersJson) {
-  let totalPrice = 0;
-  for (let i = 0; i < ordersJson.length; i++) {
-    totalPrice +=
-      parseInt(ordersJson[i].foodPrice) * parseInt(ordersJson[i].foodQty);
-  }
-  return formatPrice(totalPrice);
-}
-
-function formatPrice(value) {
-  return value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
-}
+//start the server
+server.listen(port, () => {
+  console.log(`Server now running on port ${port}!`);
+  console.log(`http://localhost:${port}`);
+});

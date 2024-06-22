@@ -18,6 +18,7 @@ const PERMISSION_DENIED = "500";
 var orderDetail = "";
 var orderJson;
 var cookieUserName = getCookie("userName");
+var sessionId = getCookie("sessionId");
 
 socket.on("room-created", (room) => {
   const roomElement = document.createElement("div");
@@ -31,7 +32,8 @@ socket.on("room-created", (room) => {
 // Send oder
 function sendOrder() {
   const userName = getCookie("userName");
-  if (!userName || userName.length < 1) {
+  const sessionId = getCookie("sessionId");
+  if (!userName || userName.length < 1 || !sessionId || sessionId.length < 1) {
     // User name undefined
     return notify(
       TOASTR_ERROR,
@@ -43,6 +45,7 @@ function sendOrder() {
   const orderDetail = {
     roomName: roomName,
     orderUser: userName,
+    sessionId: sessionId,
     shopName: document.getElementById("txtShopName").innerText,
     foodTitle: document.getElementById("txtFoodName").innerText,
     foodImage: document.getElementById("txtFoodImage").innerText,
@@ -58,6 +61,7 @@ function sendOrder() {
 // Edit Order
 function updateOrder() {
   const userName = getCookie("userName");
+  const sessionId = getCookie("sessionId");
   if (!userName || userName.length < 1) {
     // User name undefined
     return notify(
@@ -70,6 +74,7 @@ function updateOrder() {
   const orderDetail = {
     roomName: roomName,
     orderUser: userName,
+    sessionId: sessionId,
     orderId: document.getElementById("orderId").value,
     orderTime: getCurrentTime(),
     foodQty: document.getElementById("uptFoodQty").value,
@@ -81,8 +86,10 @@ function updateOrder() {
 
 // Delete Order
 function confirmDelete(event) {
+  const sessionId = getCookie("sessionId");
   let deletedOrder = {
     orderId: event.getAttribute("id"),
+    sessionId: sessionId,
     deleteUser: getCookie("userName"),
     roomId: event.getAttribute("data-room-id"),
     deliveryId: event.getAttribute("data-delivery-id"),
@@ -334,6 +341,7 @@ async function updateSummary() {
       el.innerHTML = content;
       summaryContainer.appendChild(el);
       totalItems += order.foodQty;
+      order.totalPrice = order.foodQty * order.totalPrice; // Recalculate totalPrice
       totalPrice += order.totalPrice;
     });
 
@@ -428,8 +436,10 @@ function confirmUserName() {
       errorMsg.remove();
     }
     userName = txtuserName.value;
+    const sessionId = uuid.v4();
     document.getElementById("popup-username").classList.remove("open");
     setCookie("userName", userName, 1);
+    setCookie("sessionId", sessionId, 1);
     socket.emit("new-user", roomName, userName);
     notify(TOASTR_SUCCESS, `Hé lô ${userName}`);
   } else {

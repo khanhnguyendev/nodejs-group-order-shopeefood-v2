@@ -14,7 +14,7 @@ const orderSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  ipUser: {
+  sessionId: {
     type: String,
     required: true,
   },

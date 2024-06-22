@@ -356,9 +356,6 @@ async function updateSummary() {
 function appendNewOrder(newOrder) {
   const el = document.createElement("li");
   el.id = newOrder._id;
-  // el.setAttribute("onclick", "confirmDelete(this)");
-  // el.setAttribute("data-room-id", newOrder.roomId);
-  // el.setAttribute("data-delivery-id", newOrder.deliveryId);
 
   let divFoodNote = ``;
   if (newOrder.foodNote) {

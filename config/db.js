@@ -37,7 +37,8 @@ const connectDB = async () => {
               createdTime: change.fullDocument.createdTime,
               updatedTime: change.fullDocument.updatedTime,
             };
-
+            newOrder.createdTime =
+              change.fullDocument.createdTime.toLocaleString();
             let orderResult = {};
             orderResult.status = SUCCESS;
             orderResult.newOrder = newOrder;

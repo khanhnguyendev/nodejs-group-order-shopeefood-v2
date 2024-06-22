@@ -66,6 +66,8 @@ app.use(bodyParser.json());
 app.use("/api/", router);
 
 app.get("/", (req, res) => {
+  const clientIp = req.ip;
+  console.log(`Client IP: ${clientIp} connected`);
   res.render("index", { rooms: rooms });
 });
 
@@ -273,6 +275,7 @@ io.on("connection", (socket) => {
       "::ffff:",
       ""
     );
+    let orderResult = {};
 
     let orderUser = orderReq.orderUser;
     let foodTitle = orderReq.foodTitle;

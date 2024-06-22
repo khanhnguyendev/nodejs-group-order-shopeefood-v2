@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
 
+const SUCCESS = "200";
+
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.DB_URI, {
+    mongoose.connect(process.env.DB_URI, {
       useNewUrlParser: true,
       useCreateIndex: true,
       useUnifiedTopology: true,
@@ -36,7 +38,7 @@ const connectDB = async () => {
             };
 
             let orderResult = {};
-            orderResult.status = "SUCCESS";
+            orderResult.status = SUCCESS;
             orderResult.newOrder = newOrder;
 
             console.log(
@@ -52,7 +54,7 @@ const connectDB = async () => {
             ).select(["-__v"]);
 
             let updatedResult = {};
-            updatedResult.status = "SUCCESS";
+            updatedResult.status = SUCCESS;
             updatedResult.updatedOrder = updatedOrder;
 
             console.log(

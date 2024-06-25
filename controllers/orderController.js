@@ -29,16 +29,9 @@ exports.getOrder = async (req, res) => {
       "-__v",
     ]);
 
-    const convertedOrders = orders.map((order) => {
-      const convertedTime = order.createdTime.toLocaleString("en-US", {
-        timeZone: "Asia/Bangkok",
-      });
-      return { ...order, createdTime: convertedTime };
-    });
-
     return res.json({
       result: 200,
-      reply: convertedOrders,
+      reply: orders,
     });
   } catch (error) {
     console.log("Error with fetching thoughts: ", error);

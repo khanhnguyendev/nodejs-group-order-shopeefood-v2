@@ -369,7 +369,7 @@ io.on("connection", (socket) => {
 
   // Delete API
   socket.on("delete", async (deletedReq) => {
-    const sessionId = orderReq.sessionId;
+    const sessionId = deletedReq.sessionId;
 
     let roomId = deletedReq.roomId;
     let deliveryId = deletedReq.deliveryId;
